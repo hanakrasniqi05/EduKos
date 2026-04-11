@@ -5,3 +5,14 @@ body {
   margin: 0;
   padding: 0;
 }
+@theme {
+  --color-light-green: #B5E48C;
+  --color-green-light: #99D98C;
+  --color-emerald: #76C893;
+  --color-ocean-mist: #52B69A;
+  --color-tropical-teal: #34A0A4;
+  --color-bondi-blue: #168AAD;
+  --color-cerulean: #1A759F;
+  --color-baltic-blue: #1E6091;
+  --color-yale-blue: #184E77;
+}
