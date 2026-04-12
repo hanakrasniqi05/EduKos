@@ -48,7 +48,7 @@ const HeroHeader: React.FC = () => {
   };
 
   return (
-    <section className="relative w-full h-full py-16 lg:py-24 px-6 md:px-12 lg:px-20 overflow-hidden bg-gradient-to-b from-white via-white/80 to-white/60">
+    <section className="relative w-full h-full py-16 lg:py-24 px-6 md:px-12 lg:px-20 overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
           className="absolute top-20 left-10 w-64 h-64 bg-[var(--color-light-green)]/10 rounded-full blur-3xl"
@@ -83,13 +83,13 @@ const HeroHeader: React.FC = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight overflow-hidden"
           >
-            {titleText.split("").map((char, index) => (
+            {titleText.split(" ").map((word, index) => (
               <motion.span
                 key={index}
                 variants={charVariants}
-                className="inline-block"
+                className="inline-block whitespace-nowrap mr-2"
               >
-                {char === " " ? "\u00A0" : char}
+                {word}
               </motion.span>
             ))}
           </motion.div>
