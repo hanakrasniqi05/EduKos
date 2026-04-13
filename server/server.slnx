@@ -1,2 +1,8 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EduKos.API/EduKos.API.csproj" />
+    <Project Path="src/EduKos.Application/EduKos.Application.csproj" />
+    <Project Path="src/EduKos.Domain/EduKos.Domain.csproj" />
+    <Project Path="src/EduKos.Infrastructure/EduKos.Infrastructure.csproj" />
+  </Folder>
 </Solution>
