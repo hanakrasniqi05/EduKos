@@ -1,38 +1,40 @@
-using EduKos.Application.DTOs.Auth;
-using EduKos.Application.DTOs.Common;
-using Microsoft.AspNetCore.Authorization;
+using EduKos.Application.Features.Auth.Commands.Login;
+using EduKos.Application.Features.Auth.Commands.Register;
+using EduKos.Application.Features.Auth.Commands.RefreshToken;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EduKos.API.Controllers;
 
-public class AuthController(IAuthService authService) : ApiControllerBase
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
-    [HttpPost("register")]
-    public async Task<ActionResult<ApiResponseDto<LoginResponseDto>>> Register([FromBody] RegisterRequestDto dto)
+    private readonly IMediator _mediator;
+
+    public AuthController(IMediator mediator)
     {
-        var result = await authService.RegisterAsync(dto);
-        return Ok(ApiResponseDto<LoginResponseDto>.Ok(result, "Registered successfully."));
+        _mediator = mediator;
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(RegisterCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponseDto<LoginResponseDto>>> Login([FromBody] LoginRequestDto dto)
+    public async Task<IActionResult> Login(LoginCommand command)
     {
-        var result = await authService.LoginAsync(dto);
-        return Ok(ApiResponseDto<LoginResponseDto>.Ok(result, "Login successful."));
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpPost("refresh")]
-    public async Task<ActionResult<ApiResponseDto<LoginResponseDto>>> Refresh([FromBody] RefreshTokenRequestDto dto)
+    public async Task<IActionResult> Refresh(RefreshTokenCommand command)
     {
-        var result = await authService.RefreshTokenAsync(dto);
-        return Ok(ApiResponseDto<LoginResponseDto>.Ok(result, "Token refreshed."));
-    }
-
-    [HttpPost("revoke")]
-    [Authorize]
-    public async Task<ActionResult<ApiResponseDto<object>>> Revoke([FromBody] string refreshToken)
-    {
-        await authService.RevokeTokenAsync(refreshToken, CurrentUserId);
-        return Ok(ApiResponseDto<object>.Ok(null!, "Token revoked."));
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 }

@@ -1,6 +1,9 @@
-namespace EduKos.Application.DTOs.Auth;
+using EduKos.Application.DTOs.Auth;
+using MediatR;
 
-public class RegisterRequestDto
+namespace EduKos.Application.Features.Auth.Commands.Register;
+
+public class RegisterCommand : IRequest<AuthResponseDto>
 {
     public string Email { get; set; } = default!;
 
@@ -8,6 +11,5 @@ public class RegisterRequestDto
 
     public string ConfirmPassword { get; set; } = default!;
 
-    // Determines role at registration (User / Institution)
     public string Role { get; set; } = default!;
 }

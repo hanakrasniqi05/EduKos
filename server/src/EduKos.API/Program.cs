@@ -1,41 +1,78 @@
+using EduKos.Application.DependencyInjection;
+using EduKos.Infrastructure.DependencyInjection;
+using EduKos.Infrastructure.Seed;
+using EduKos.Infrastructure.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Controllers
+builder.Services.AddControllers();
+
+// OpenAPI (required for Scalar)
 builder.Services.AddOpenApi();
+
+// DI Layers
+builder.Services
+    .AddApplication()
+    .AddInfrastructure(builder.Configuration);
+
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!);
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Dev tools
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi(); // exposes /openapi/v1.json
+
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "EduKos API";
+        options.Theme = ScalarTheme.Default;
+    });
 }
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.MapGet("/weatherforecast", () =>
+app.MapControllers();
+
+// Seed roles
+using (var scope = app.Services.CreateScope())
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var roleManager = scope.ServiceProvider
+        .GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<ApplicationRole>>();
+
+    await RoleSeeder.SeedRolesAsync(roleManager);
+}
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
