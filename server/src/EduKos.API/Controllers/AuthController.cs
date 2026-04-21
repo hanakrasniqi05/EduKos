@@ -24,12 +24,19 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginCommand command)
+   [HttpPost("login")]
+public async Task<IActionResult> Login([FromBody] LoginCommand command)
+{
+    try
     {
-        var result = await _mediator.Send(command);
-        return Ok(result);
+        var response = await _mediator.Send(command);
+        return Ok(response);
     }
+    catch (Exception ex)
+    {
+        return BadRequest(new { message = ex.Message }); 
+    }
+}
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(RefreshTokenCommand command)

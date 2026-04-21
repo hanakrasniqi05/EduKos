@@ -3,7 +3,8 @@ import { Routes, Route } from "react-router-dom";
 
 import HomePage from "../pages/HomePage";
 import NotFound from "../pages/NotFound";
-import Navbar from "../sections/Navbar";
+import Navbar from "../sections/NavBar";
+import LogIn from "../pages/LogIn";
 
 const App: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/login" element={<LogIn />} />
       </Routes>
     </>
   );
