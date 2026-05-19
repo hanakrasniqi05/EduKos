@@ -20,6 +20,9 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
             Email = request.Email,
             Password = request.Password,
             ConfirmPassword = request.ConfirmPassword,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
             Role = request.Role
         };
 

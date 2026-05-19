@@ -8,6 +8,11 @@ public class RegisterRequestDto
 
     public string ConfirmPassword { get; set; } = default!;
 
-    // Determines role at registration (User / Institution)
+    public string? FirstName { get; set; }
+
+    public string? LastName { get; set; }
+
+    public string? PhoneNumber { get; set; }
+
     public string Role { get; set; } = default!;
 }

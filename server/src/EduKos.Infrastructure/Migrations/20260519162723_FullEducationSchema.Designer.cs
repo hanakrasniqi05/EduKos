@@ -4,6 +4,7 @@ using EduKos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduKos.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260519162723_FullEducationSchema")]
+    partial class FullEducationSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -391,28 +394,6 @@ namespace EduKos.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("InstitutionTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            InstitutionTypeId = 1,
-                            Name = "Cerdhe"
-                        },
-                        new
-                        {
-                            InstitutionTypeId = 2,
-                            Name = "Shkolla fillore"
-                        },
-                        new
-                        {
-                            InstitutionTypeId = 3,
-                            Name = "Shkolla e mesme"
-                        },
-                        new
-                        {
-                            InstitutionTypeId = 4,
-                            Name = "Fakultete"
-                        });
                 });
 
             modelBuilder.Entity("EduKos.Domain.Entities.Notification", b =>
@@ -601,23 +582,6 @@ namespace EduKos.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Roles");
-
-                    b.HasData(
-                        new
-                        {
-                            RoleId = 1,
-                            Name = "Nxenes"
-                        },
-                        new
-                        {
-                            RoleId = 2,
-                            Name = "Shkolla"
-                        },
-                        new
-                        {
-                            RoleId = 3,
-                            Name = "Admin"
-                        });
                 });
 
             modelBuilder.Entity("EduKos.Domain.Entities.RolePermission", b =>

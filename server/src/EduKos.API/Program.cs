@@ -1,26 +1,23 @@
 using EduKos.Application.DependencyInjection;
 using EduKos.Infrastructure.DependencyInjection;
 using EduKos.Infrastructure.Seed;
-using EduKos.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
+using EduKos.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
 builder.Services.AddControllers();
 
-// OpenAPI (required for Scalar)
 builder.Services.AddOpenApi();
 
-// DI Layers
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
 
-// JWT Authentication
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -39,7 +36,8 @@ builder.Services.AddAuthentication(options =>
 
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(key)
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -58,10 +56,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Dev tools
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi(); // exposes /openapi/v1.json
+    app.MapOpenApi();
 
     app.MapScalarApiReference(options =>
     {
@@ -79,13 +76,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Seed roles
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider
-        .GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<ApplicationRole>>();
-
-    await RoleSeeder.SeedRolesAsync(roleManager);
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await context.Database.MigrateAsync();
+    await RoleSeeder.SeedRolesAsync(context);
 }
 
 app.Run();

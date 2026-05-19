@@ -1,84 +1,148 @@
 using EduKos.Application.DTOs.Auth;
 using EduKos.Application.Interfaces.Auth;
+using EduKos.Domain.Constants;
+using EduKos.Domain.Entities;
+using EduKos.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 
 namespace EduKos.Infrastructure.Identity;
 
 public class IdentityService : IAuthService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly AppDbContext _context;
+    private readonly PasswordHasher<User> _passwordHasher;
     private readonly ITokenService _tokenService;
+    private readonly int _refreshTokenDays;
+    private readonly int _accessTokenMinutes;
 
     public IdentityService(
-        UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        ITokenService tokenService)
+        AppDbContext context,
+        PasswordHasher<User> passwordHasher,
+        ITokenService tokenService,
+        Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
+        _context = context;
+        _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _refreshTokenDays = int.TryParse(configuration["Jwt:RefreshTokenDays"], out var days) ? days : 7;
+        _accessTokenMinutes = int.TryParse(configuration["Jwt:AccessTokenMinutes"], out var minutes) ? minutes : 60;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request, CancellationToken cancellationToken = default)
     {
-        var user = new ApplicationUser
+        if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+            throw new InvalidOperationException("Password confirmation does not match.");
+
+        if (await _context.Users.AnyAsync(x => x.Email == request.Email, cancellationToken))
+            throw new InvalidOperationException("A user with this email already exists.");
+
+        var roleName = AppRoles.AllRoles.Contains(request.Role) && request.Role != AppRoles.Admin
+            ? request.Role
+            : AppRoles.Nxenes;
+
+        var role = await _context.Roles.FirstOrDefaultAsync(x => x.Name == roleName, cancellationToken)
+            ?? throw new InvalidOperationException($"Role '{roleName}' is not configured.");
+
+        var user = new User
         {
-            UserName = request.Email,
-            Email = request.Email
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
+            IsActive = true
         };
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
+        user.UserRoles.Add(new UserRole { RoleId = role.RoleId });
 
-        if (!result.Succeeded)
-            throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
-
-        await _userManager.AddToRoleAsync(user, request.Role);
-
-        var roles = await _userManager.GetRolesAsync(user);
-
-        return new AuthResponseDto
-        {
-            UserId = user.Id,
-            Email = user.Email!,
-            AccessToken = await _tokenService.GenerateAccessTokenAsync(user.Id, user.Email!, roles),
-            RefreshToken = await _tokenService.GenerateRefreshTokenAsync(),
-            Roles = roles
-        };
+        await _context.Users.AddAsync(user, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return await BuildAuthResponseAsync(user, cancellationToken);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _context.Users
+            .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.Email == request.Email, cancellationToken);
 
         if (user == null)
-        throw new KeyNotFoundException("User does not exist");
+            throw new KeyNotFoundException("User does not exist");
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+        if (!user.IsActive)
+            throw new UnauthorizedAccessException("User account is inactive.");
 
-        if (!result.Succeeded)
+        var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+        if (result == PasswordVerificationResult.Failed)
             throw new Exception("Invalid credentials");
 
-        var roles = await _userManager.GetRolesAsync(user);
-
-        return new AuthResponseDto
-        {
-            UserId = user.Id,
-            Email = user.Email!,
-            AccessToken = await _tokenService.GenerateAccessTokenAsync(user.Id, user.Email!, roles),
-            RefreshToken = await _tokenService.GenerateRefreshTokenAsync(),
-            Roles = roles
-        };
+        return await BuildAuthResponseAsync(user, cancellationToken);
     }
 
     public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
-        var isValid = await _tokenService.ValidateRefreshTokenAsync(refreshToken);
+        var refreshTokenHash = _tokenService.HashRefreshToken(refreshToken);
+        var token = await _context.RefreshTokens
+            .Include(x => x.User)
+            .ThenInclude(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.Token == refreshTokenHash, cancellationToken);
 
-        if (!isValid)
-            throw new Exception("Invalid refresh token");
+        if (token == null || token.RevokedAt != null || token.ExpiresAt <= DateTime.UtcNow)
+            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
-        // In real system you'd resolve user from refresh token store
-        throw new NotImplementedException("Refresh token user resolution comes later with persistence");
+        if (!token.User.IsActive)
+            throw new UnauthorizedAccessException("User account is inactive.");
+
+        token.RevokedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync(cancellationToken);
+        return await BuildAuthResponseAsync(token.User, cancellationToken);
+    }
+
+    public async Task RevokeTokenAsync(string refreshToken, int userId, CancellationToken cancellationToken = default)
+    {
+        var refreshTokenHash = _tokenService.HashRefreshToken(refreshToken);
+        var token = await _context.RefreshTokens
+            .FirstOrDefaultAsync(x => x.Token == refreshTokenHash && x.UserId == userId, cancellationToken)
+            ?? throw new KeyNotFoundException("Refresh token not found.");
+
+        token.RevokedAt ??= DateTime.UtcNow;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<AuthResponseDto> BuildAuthResponseAsync(User user, CancellationToken cancellationToken)
+    {
+        var roles = user.UserRoles.Select(x => x.Role.Name).ToList();
+        if (roles.Count == 0)
+        {
+            roles = await _context.UserRoles
+                .Where(x => x.UserId == user.UserId)
+                .Select(x => x.Role.Name)
+                .ToListAsync(cancellationToken);
+        }
+
+        var refreshTokenValue = await _tokenService.GenerateRefreshTokenAsync();
+        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenDays);
+
+        _context.RefreshTokens.Add(new RefreshToken
+        {
+            UserId = user.UserId,
+            Token = _tokenService.HashRefreshToken(refreshTokenValue),
+            ExpiresAt = refreshTokenExpiresAt
+        });
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return new AuthResponseDto
+        {
+            UserId = user.UserId.ToString(),
+            Email = user.Email,
+            AccessToken = await _tokenService.GenerateAccessTokenAsync(user.UserId.ToString(), user.Email, roles),
+            RefreshToken = refreshTokenValue,
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
+            Roles = roles
+        };
     }
 }

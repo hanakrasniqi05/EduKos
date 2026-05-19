@@ -6,7 +6,5 @@ public interface ITokenService
 
     Task<string> GenerateRefreshTokenAsync();
 
-    Task<bool> ValidateRefreshTokenAsync(string refreshToken);
-
-    Task RevokeRefreshTokenAsync(string refreshToken);
+    string HashRefreshToken(string refreshToken);
 }

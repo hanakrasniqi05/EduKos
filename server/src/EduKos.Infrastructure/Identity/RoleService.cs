@@ -1,47 +1,63 @@
 using EduKos.Application.Interfaces.Auth;
-using Microsoft.AspNetCore.Identity;
+using EduKos.Domain.Entities;
+using EduKos.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduKos.Infrastructure.Identity;
 
 public class RoleService : IRoleService
 {
-    private readonly RoleManager<ApplicationRole> _roleManager;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly AppDbContext _context;
 
-    public RoleService(
-        RoleManager<ApplicationRole> roleManager,
-        UserManager<ApplicationUser> userManager)
+    public RoleService(AppDbContext context)
     {
-        _roleManager = roleManager;
-        _userManager = userManager;
+        _context = context;
     }
 
     public async Task AssignRoleAsync(string userId, string role)
     {
-        var user = await _userManager.FindByIdAsync(userId)
-                   ?? throw new Exception("User not found");
+        if (!int.TryParse(userId, out var id))
+            throw new ArgumentException("Invalid user id.", nameof(userId));
 
-        await _userManager.AddToRoleAsync(user, role);
+        var userExists = await _context.Users.AnyAsync(x => x.UserId == id);
+        if (!userExists)
+            throw new Exception("User not found");
+
+        var roleEntity = await _context.Roles.FirstOrDefaultAsync(x => x.Name == role)
+            ?? throw new Exception("Role not found");
+
+        var alreadyAssigned = await _context.UserRoles
+            .AnyAsync(x => x.UserId == id && x.RoleId == roleEntity.RoleId);
+
+        if (!alreadyAssigned)
+        {
+            await _context.UserRoles.AddAsync(new UserRole { UserId = id, RoleId = roleEntity.RoleId });
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task<IList<string>> GetUserRolesAsync(string userId)
     {
-        var user = await _userManager.FindByIdAsync(userId)
-                   ?? throw new Exception("User not found");
+        if (!int.TryParse(userId, out var id))
+            throw new ArgumentException("Invalid user id.", nameof(userId));
 
-        return await _userManager.GetRolesAsync(user);
+        return await _context.UserRoles
+            .Where(x => x.UserId == id)
+            .Select(x => x.Role.Name)
+            .ToListAsync();
     }
 
     public async Task<bool> RoleExistsAsync(string role)
     {
-        return await _roleManager.RoleExistsAsync(role);
+        return await _context.Roles.AnyAsync(x => x.Name == role);
     }
 
     public async Task CreateRoleAsync(string role)
     {
-        if (!await _roleManager.RoleExistsAsync(role))
+        if (!await _context.Roles.AnyAsync(x => x.Name == role))
         {
-            await _roleManager.CreateAsync(new ApplicationRole { Name = role });
+            await _context.Roles.AddAsync(new Role { Name = role });
+            await _context.SaveChangesAsync();
         }
     }
 }

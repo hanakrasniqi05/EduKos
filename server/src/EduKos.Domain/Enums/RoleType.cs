@@ -2,7 +2,7 @@ namespace EduKos.Domain.Enums;
 
 public enum RoleType
 {
-    User = 0,
-    Institution = 1,
-    Admin = 2
+    Admin = 0,
+    Nxenes = 1,
+    Shkolla = 2
 }

@@ -2,6 +2,7 @@ using EduKos.Application.Interfaces.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using System.Security.Claims;
 using System.Text;
 
@@ -21,7 +22,8 @@ public class TokenService : ITokenService
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
-            new Claim(ClaimTypes.Email, email)
+            new Claim(ClaimTypes.Email, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
         };
 
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
@@ -35,7 +37,7 @@ public class TokenService : ITokenService
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
+            expires: DateTime.UtcNow.AddMinutes(GetAccessTokenMinutes()),
             signingCredentials: creds
         );
 
@@ -44,17 +46,20 @@ public class TokenService : ITokenService
 
     public Task<string> GenerateRefreshTokenAsync()
     {
-        return Task.FromResult(Guid.NewGuid().ToString("N"));
+        var bytes = RandomNumberGenerator.GetBytes(64);
+        return Task.FromResult(Convert.ToBase64String(bytes));
     }
 
-    public Task<bool> ValidateRefreshTokenAsync(string refreshToken)
+    public string HashRefreshToken(string refreshToken)
     {
-        // Placeholder (real implementation uses DB later)
-        return Task.FromResult(true);
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+        return Convert.ToBase64String(bytes);
     }
 
-    public Task RevokeRefreshTokenAsync(string refreshToken)
+    private int GetAccessTokenMinutes()
     {
-        return Task.CompletedTask;
+        return int.TryParse(_config["Jwt:AccessTokenMinutes"], out var minutes)
+            ? minutes
+            : 60;
     }
 }

@@ -1,8 +1,14 @@
+using System.Security.Claims;
 using EduKos.Application.Features.Auth.Commands.Login;
 using EduKos.Application.Features.Auth.Commands.Register;
 using EduKos.Application.Features.Auth.Commands.RefreshToken;
+using EduKos.Application.Interfaces.Auth;
+using EduKos.Application.DTOs.Education;
+using EduKos.Infrastructure.Persistence;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduKos.API.Controllers;
 
@@ -11,37 +17,118 @@ namespace EduKos.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IAuthService _authService;
+    private readonly AppDbContext _context;
 
-    public AuthController(IMediator mediator)
+    public AuthController(IMediator mediator, IAuthService authService, AppDbContext context)
     {
         _mediator = mediator;
+        _authService = authService;
+        _context = context;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterCommand command)
     {
-        var result = await _mediator.Send(command);
-        return Ok(result);
+        try
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-   [HttpPost("login")]
-public async Task<IActionResult> Login([FromBody] LoginCommand command)
-{
-    try
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
-        var response = await _mediator.Send(command);
-        return Ok(response);
+        try
+        {
+            var response = await _mediator.Send(command);
+            return Ok(response);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or KeyNotFoundException)
+        {
+            return Unauthorized(new { message = "Invalid credentials" });
+        }
     }
-    catch (Exception ex)
-    {
-        return BadRequest(new { message = ex.Message }); 
-    }
-}
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(RefreshTokenCommand command)
     {
-        var result = await _mediator.Send(command);
-        return Ok(result);
+        try
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _authService.RevokeTokenAsync(command.RefreshToken, CurrentUserId(), cancellationToken);
+            return Ok(new { message = "Refresh token revoked" });
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or KeyNotFoundException)
+        {
+            return Unauthorized(new { message = "Invalid refresh token" });
+        }
+    }
+
+    [HttpPost("revoke-refresh-token")]
+    [Authorize]
+    public async Task<IActionResult> RevokeRefreshToken([FromBody] RefreshTokenCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _authService.RevokeTokenAsync(command.RefreshToken, CurrentUserId(), cancellationToken);
+            return Ok(new { message = "Refresh token revoked" });
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or KeyNotFoundException)
+        {
+            return Unauthorized(new { message = "Invalid refresh token" });
+        }
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me(CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        var user = await _context.Users
+            .AsNoTracking()
+            .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+
+        if (user == null)
+            return NotFound();
+
+        return Ok(new UserDto
+        {
+            UserId = user.UserId,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            Roles = user.UserRoles.Select(x => x.Role.Name).ToList()
+        });
+    }
+
+    private int CurrentUserId()
+    {
+        var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(value, out var userId) ? userId : throw new UnauthorizedAccessException("Invalid user.");
     }
 }
