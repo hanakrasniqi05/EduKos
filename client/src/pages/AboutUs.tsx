@@ -1,38 +1,48 @@
 import { motion } from "framer-motion";
 import Footer from "../sections/Footer";
 
+//import FE from "../assets/FE.jpg";
+import HK from "../assets/HK.png";
+//import LB from "../assets/LB.png";
+//import AA from "../assets/AA.jpeg";
+import BL from "../assets/BL.jpg";
+
 const team = [
   {
     name: "Florenta Elezi",
     role: "Software Engineer",
-    img: ""
+    img: "",
+    linkedin: "https://www.linkedin.com/in/florenta-elezi-7469613aa/",
   },
   {
     name: "Hana Krasniqi",
     role: "Data Scientist",
-    img: ""
+    img: HK,
+    linkedin: "https://www.linkedin.com/in/hana-krasniqi",
   },
   {
     name: "Leon Berisha",
     role: "Backend Developer",
-    img: ""
+    img: "",
+    linkedin: "https://www.linkedin.com/in/leon-berisha-6a8979362/",
   },
   {
     name: "Albin Aliu",
     role: "Python Developer",
-    img: ""
+    img: "",
+    linkedin: "https://www.linkedin.com/in/albin-aliu-93b25a21a/",
   },
   {
     name: "Blerton Lokaj",
     role: "Software Developer",
-    img: ""
-  }
+    img: BL,
+    linkedin: "https://www.linkedin.com/in/blerton-lokaj-4398512a8/",
+  },
 ];
 
 export default function AboutUs() {
   return (
     <div className="min-h-screen text-gray-800">
-      
       {/* HERO */}
       <section className="py-32 px-6 text-center">
         <motion.div
@@ -78,8 +88,10 @@ export default function AboutUs() {
             <div className="inline-block px-4 py-1 bg-green-100 rounded-full text-green-700 text-sm font-semibold mb-4">
               Our Mission
             </div>
+
             <h2 className="text-4xl font-bold mb-6 text-gray-900">
-              Making education choices <span className="text-green-600">simple and transparent</span>
+              Making education choices{" "}
+              <span className="text-green-600">simple and transparent</span>
             </h2>
             <p className="text-gray-600 leading-relaxed text-lg mb-4">
               We believe every student deserves a clear, confident path to their future. 
@@ -96,26 +108,34 @@ export default function AboutUs() {
 
       {/* TEAM */}
       <section className="py-20 px-6 bg-gray-50">
-        <h2 className="text-center text-4xl font-bold mb-3 text-gray-900">Meet the Team</h2>
+        <h2 className="text-center text-4xl font-bold mb-3 text-gray-900">
+          Meet the Team
+        </h2>
         <p className="text-center text-gray-500 mb-14">Class of 2026</p>
 
         <div className="grid md:grid-cols-5 sm:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {team.map((member, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ y: -10 }}
-              className="group"
-            >
-              <div className="relative overflow-hidden rounded-2xl shadow-md bg-white">
-                <img
-                  src={member.img}
-                  alt={member.name}
-                  className="w-full h-64 object-cover group-hover:scale-110 transition duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end justify-center pb-6">
-                  <span className="text-white font-semibold">View Profile →</span>
+            <motion.div key={i} whileHover={{ y: -10 }} className="group">
+              <a
+                href={member.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <div className="relative overflow-hidden rounded-2xl shadow-md bg-white">
+                  <img
+                    src={member.img}
+                    alt={member.name}
+                    className="w-full h-64 object-cover group-hover:scale-110 transition duration-300"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end justify-center pb-6">
+                    <span className="text-white font-semibold">
+                      View Profile →
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </a>
 
               <div className="mt-4 text-center">
                 <h3 className="font-semibold text-lg text-gray-900">{member.name}</h3>
@@ -140,16 +160,16 @@ export default function AboutUs() {
             {[
               {
                 title: "Clarity",
-                desc: "We break down complex education paths into simple, actionable steps. No jargon, no confusion — just clear guidance."
+                desc: "We break down complex education paths into simple, actionable steps. No jargon, no confusion — just clear guidance.",
               },
               {
                 title: "Access",
-                desc: "Information should be free and accessible to everyone. We're leveling the playing field for students everywhere."
+                desc: "Information should be free and accessible to everyone. We're leveling the playing field for students everywhere.",
               },
               {
                 title: "Trust",
-                desc: "Honesty is our foundation. We provide verified, transparent insights so you can make decisions with confidence."
-              }
+                desc: "Honesty is our foundation. We provide verified, transparent insights so you can make decisions with confidence.",
+              },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -166,10 +186,7 @@ export default function AboutUs() {
           </div>
         </div>
       </section>
-
-      
       <Footer />
-
     </div>
   );
 }
