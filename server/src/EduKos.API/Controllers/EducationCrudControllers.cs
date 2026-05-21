@@ -68,6 +68,19 @@ public class NotificationsController(AppDbContext context) : CrudControllerBase<
     protected override DbSet<Notification> Set => Context.Notifications;
     protected override int GetId(Notification entity) => entity.NotificationId;
     protected override void SetId(Notification entity, int id) => entity.NotificationId = id;
+
+    [HttpGet("mine")]
+    public async Task<ActionResult<IEnumerable<NotificationDto>>> GetMine(CancellationToken cancellationToken)
+    {
+        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        var notifications = await Context.Notifications
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return Ok(notifications.Select(MapToDto));
+    }
 }
 
 [Route("api/[controller]")]
@@ -85,4 +98,3 @@ public class SettingsController(AppDbContext context) : CrudControllerBase<Setti
     protected override int GetId(Setting entity) => entity.SettingId;
     protected override void SetId(Setting entity, int id) => entity.SettingId = id;
 }
-

@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<InstitutionApplication> Applications => Set<InstitutionApplication>();
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<FileAsset> Files => Set<FileAsset>();
     public DbSet<InstitutionType> InstitutionTypes => Set<InstitutionType>();
@@ -105,6 +106,22 @@ public class AppDbContext : DbContext
             entity.Property(e => e.IsRead).HasDefaultValue(false);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
+        });
+
+        builder.Entity<InstitutionApplication>(entity =>
+        {
+            entity.ToTable("Applications");
+            entity.HasKey(e => e.ApplicationId);
+            entity.Property(e => e.FullName).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Phone).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.EducationLevel).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.SelectedProgram).HasMaxLength(255);
+            entity.Property(e => e.Message).HasColumnType("text");
+            entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("pending").IsRequired();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            entity.HasOne(e => e.Institution).WithMany().HasForeignKey(e => e.InstitutionId);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<Setting>(entity =>

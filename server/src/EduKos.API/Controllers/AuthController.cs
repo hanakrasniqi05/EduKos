@@ -126,6 +126,37 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMe([FromBody] UserProfileUpdateDto dto, CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+
+        if (user == null)
+            return NotFound();
+
+        user.FirstName = dto.FirstName;
+        user.LastName = dto.LastName;
+        user.PhoneNumber = dto.PhoneNumber;
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Ok(new UserDto
+        {
+            UserId = user.UserId,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            Roles = User.Claims
+                .Where(x => x.Type == ClaimTypes.Role)
+                .Select(x => x.Value)
+                .ToList()
+        });
+    }
+
     private int CurrentUserId()
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier);

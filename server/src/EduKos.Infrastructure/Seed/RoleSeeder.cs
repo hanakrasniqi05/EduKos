@@ -30,6 +30,7 @@ public class RoleSeeder
         await SeedUserAsync(context, "admin@edukos.com", "Admin", "EduKos", AppRoles.Admin, "Admin123!");
         await SeedUserAsync(context, "nxenes@edukos.com", "Nxenes", "EduKos", AppRoles.Nxenes, "Nxenes123!");
         await SeedUserAsync(context, "shkolla@edukos.com", "Shkolla", "EduKos", AppRoles.Shkolla, "Shkolla123!");
+        await SeedInstitutionsAsync(context);
     }
 
     private static async Task SeedUserAsync(
@@ -66,6 +67,59 @@ public class RoleSeeder
         {
             await context.UserRoles.AddAsync(new UserRole { UserId = user.UserId, RoleId = role.RoleId });
         }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedInstitutionsAsync(AppDbContext context)
+    {
+        if (await context.Institutions.AnyAsync())
+            return;
+
+        var shkollaUserId = await context.Users
+            .Where(x => x.Email == "shkolla@edukos.com")
+            .Select(x => (int?)x.UserId)
+            .FirstOrDefaultAsync();
+
+        var types = await context.InstitutionTypes.ToDictionaryAsync(x => x.Name, x => x.InstitutionTypeId);
+
+        await context.Institutions.AddRangeAsync(
+            new Institution
+            {
+                InstitutionTypeId = types["Shkolla fillore"],
+                OwnerUserId = shkollaUserId,
+                Name = "Shkolla Fillore Hasan Prishtina",
+                Description = "Shkolle fillore me fokus ne edukim cilesor dhe aktivitete jashteshkollore.",
+                City = "Prishtine",
+                Address = "Rr. Agim Ramadani, Prishtine",
+                Email = "info@hasanprishtina.edu",
+                Phone = "+383 38 123 456",
+                IsApproved = true
+            },
+            new Institution
+            {
+                InstitutionTypeId = types["Fakultete"],
+                OwnerUserId = shkollaUserId,
+                Name = "Kolegji AAB",
+                Description = "Institucion i arsimit te larte me programe bachelor dhe master.",
+                City = "Prishtine",
+                Address = "Zona Industriale, Prishtine",
+                Website = "www.aab-edu.net",
+                Email = "info@aab-edu.net",
+                Phone = "+383 38 100 200",
+                IsApproved = true
+            },
+            new Institution
+            {
+                InstitutionTypeId = types["Shkolla e mesme"],
+                OwnerUserId = shkollaUserId,
+                Name = "Gjimnazi Xhevdet Doda",
+                Description = "Gjimnaz i pergjithshem per pergatitje universitare.",
+                City = "Prishtine",
+                Address = "Lakrishte, Prishtine",
+                Phone = "+383 38 789 012",
+                IsApproved = true
+            });
 
         await context.SaveChangesAsync();
     }

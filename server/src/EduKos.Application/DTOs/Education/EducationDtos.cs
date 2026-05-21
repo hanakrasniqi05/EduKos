@@ -142,6 +142,27 @@ public class NotificationDto
     public DateTime CreatedAt { get; set; }
 }
 
+public class ApplicationDto
+{
+    public int ApplicationId { get; set; }
+    [Required] public int InstitutionId { get; set; }
+    public int? UserId { get; set; }
+    [Required, MaxLength(150)] public string FullName { get; set; } = default!;
+    [Required, EmailAddress, MaxLength(255)] public string Email { get; set; } = default!;
+    [Required, MaxLength(50)] public string Phone { get; set; } = default!;
+    [Required, MaxLength(100)] public string EducationLevel { get; set; } = default!;
+    [MaxLength(255)] public string? SelectedProgram { get; set; }
+    public string? Message { get; set; }
+    [MaxLength(50)] public string Status { get; set; } = "pending";
+    public DateTime CreatedAt { get; set; }
+    public string? InstitutionName { get; set; }
+}
+
+public class ApplicationStatusUpdateDto
+{
+    [Required, MaxLength(50)] public string Status { get; set; } = default!;
+}
+
 public class FileDto
 {
     public int FileId { get; set; }
@@ -183,4 +204,11 @@ public class InstitutionFullDetailsDto
     public IList<InstitutionFacilityDto> Facilities { get; set; } = new List<InstitutionFacilityDto>();
     public IList<ReviewDto> Reviews { get; set; } = new List<ReviewDto>();
     public IList<InstitutionAnnouncementDto> Announcements { get; set; } = new List<InstitutionAnnouncementDto>();
+}
+
+public class UserProfileUpdateDto
+{
+    [MaxLength(100)] public string? FirstName { get; set; }
+    [MaxLength(100)] public string? LastName { get; set; }
+    [MaxLength(50)] public string? PhoneNumber { get; set; }
 }

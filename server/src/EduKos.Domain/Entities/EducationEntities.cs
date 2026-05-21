@@ -88,6 +88,24 @@ public class Notification
     public User User { get; set; } = default!;
 }
 
+public class InstitutionApplication
+{
+    public int ApplicationId { get; set; }
+    public int InstitutionId { get; set; }
+    public int? UserId { get; set; }
+    public string FullName { get; set; } = default!;
+    public string Email { get; set; } = default!;
+    public string Phone { get; set; } = default!;
+    public string EducationLevel { get; set; } = default!;
+    public string? SelectedProgram { get; set; }
+    public string? Message { get; set; }
+    public string Status { get; set; } = "pending";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public Institution Institution { get; set; } = default!;
+    public User? User { get; set; }
+}
+
 public class Setting
 {
     public int SettingId { get; set; }

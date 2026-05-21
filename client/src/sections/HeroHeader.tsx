@@ -1,9 +1,9 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import heroImg from "../assets/heroheaderimage.png";
 
 const HeroHeader: React.FC = () => {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -14,12 +14,12 @@ const HeroHeader: React.FC = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
   };
 
-  const imageVariants = {
+  const imageVariants: Variants = {
     hidden: { opacity: 0, scale: 0.6, x: 100, rotate: 10 },
     visible: { 
       opacity: 1, 
@@ -31,7 +31,7 @@ const HeroHeader: React.FC = () => {
   };
 
   const titleText = "Gjej rrugën tënde të arsimit në Kosovë";
-  const titleVariants = {
+  const titleVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -42,7 +42,7 @@ const HeroHeader: React.FC = () => {
     },
   };
 
-  const charVariants = {
+  const charVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };

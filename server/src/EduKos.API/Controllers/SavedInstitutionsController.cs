@@ -29,6 +29,27 @@ public class SavedInstitutionsController(AppDbContext context) : CrudControllerB
         return Ok(saved.Select(MapToDto));
     }
 
+    [HttpGet("mine/institutions")]
+    public async Task<ActionResult<IEnumerable<InstitutionDto>>> GetMyInstitutions(CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        var institutions = await Context.SavedInstitutions
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Include(x => x.Institution)
+            .ThenInclude(x => x.InstitutionType)
+            .Select(x => x.Institution)
+            .ToListAsync(cancellationToken);
+
+        return Ok(institutions.Select(institution =>
+        {
+            var dto = new InstitutionDto();
+            Copy(institution, dto);
+            dto.InstitutionTypeName = institution.InstitutionType.Name;
+            return dto;
+        }));
+    }
+
     [HttpPost("save")]
     public async Task<ActionResult<SavedInstitutionDto>> Save([FromBody] SaveInstitutionRequestDto dto, CancellationToken cancellationToken)
     {
