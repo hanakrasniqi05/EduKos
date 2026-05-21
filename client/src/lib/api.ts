@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5056/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5088/api";
 
 export type AuthResponse = {
   userId: string;
@@ -36,6 +36,10 @@ export type InstitutionDto = {
   isApproved: boolean;
   createdAt: string;
   institutionTypeName?: string;
+};
+export type InstitutionTypeDto = {
+  institutionTypeId: number;
+  name: string;
 };
 
 export type NotificationDto = {
@@ -207,6 +211,13 @@ export async function getRecommendations() {
 
 export async function getInstitutions() {
   return request<InstitutionDto[]>("/institutions");
+}
+export async function getInstitutionTypes() {
+  return request<InstitutionTypeDto[]>("/InstitutionTypes");
+}
+
+export async function getInstitutionsByType(institutionTypeId: number) {
+  return request<InstitutionDto[]>(`/institutions/by-type/${institutionTypeId}`);
 }
 
 export async function submitApplication(data: Omit<ApplicationDto, "applicationId" | "createdAt" | "status" | "institutionName" | "userId">) {
