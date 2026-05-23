@@ -1,36 +1,36 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../assets/edukos-green.png";
+import {
+  ROLES,
+  clearAuth,
+  getDashboardPath,
+  getStoredAuth,
+  logout,
+  type AuthResponse,
+} from "../lib/api";
 
 const Navbar: React.FC = () => {
+  const navigate = useNavigate();
+  const [auth, setAuth] = useState<AuthResponse | null>(() => getStoredAuth());
   const [isOpen, setIsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const dropdownVariants = {
-    hidden: { opacity: 0, y: -10, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.2 },
-    },
-    exit: {
-      opacity: 0,
-      y: -10,
-      scale: 0.95,
-      transition: { duration: 0.15 },
-    },
-  };
+  useEffect(() => {
+    const syncAuth = () => setAuth(getStoredAuth());
+    window.addEventListener("edukos-auth-change", syncAuth);
+    window.addEventListener("storage", syncAuth);
+    return () => {
+      window.removeEventListener("edukos-auth-change", syncAuth);
+      window.removeEventListener("storage", syncAuth);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -39,23 +39,74 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const roles = auth?.roles ?? [];
+  const isStudent = roles.includes(ROLES.Nxenes);
+  const dashboardPath = auth ? getDashboardPath(roles) : "/dashboard";
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } catch {
+      clearAuth();
+    }
+    setMobileOpen(false);
+    navigate("/");
+  }
+
+  const dropdownVariants = {
+    hidden: { opacity: 0, y: -10, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2 } },
+    exit: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.15 } },
+  };
+
+  const authButtons = auth ? (
+    <>
+      <Link to={dashboardPath}>
+        <button className="px-4 py-2 rounded-xl border border-gray-700 text-gray-800 hover:bg-white/30 transition">
+          Dashboard
+        </button>
+      </Link>
+      {isStudent && (
+        <Link to="/apply">
+          <button className="px-4 py-2 rounded-xl border border-gray-700 text-gray-800 hover:bg-white/30 transition">
+            Apliko
+          </button>
+        </Link>
+      )}
+      <button
+        onClick={handleLogout}
+        className="px-5 py-2 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-200 transition"
+      >
+        Dil
+      </button>
+    </>
+  ) : (
+    <>
+      <Link to="/login">
+        <button className="px-4 py-2 rounded-xl border border-gray-700 text-gray-800 hover:bg-white/30 transition">
+          Login
+        </button>
+      </Link>
+      <Link to="/signup">
+        <button className="px-5 py-2 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-200 transition">
+          Sign Up
+        </button>
+      </Link>
+    </>
+  );
+
   return (
     <nav className="w-full flex justify-center mt-4 relative z-[9999]">
       <div className="w-[95%] md:w-[90%] bg-[var(--color-emerald)]/70 backdrop-blur-md rounded-2xl px-6 py-3 flex items-center justify-between shadow-lg border border-white/20 relative">
-
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
           <img src={logoImg} alt="Logo" className="h-10 w-auto" />
         </Link>
 
-        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-gray-800 font-medium">
-
           <Link to="/" className="hover:text-white transition">
             Home
           </Link>
 
-          {/* Explore Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -87,22 +138,8 @@ const Navbar: React.FC = () => {
           </Link>
         </div>
 
-        {/* Desktop Buttons */}
-        <div className="hidden md:flex items-center gap-3">
-          <Link to="/login">
-            <button className="px-4 py-2 rounded-xl border border-gray-700 text-gray-800 hover:bg-white/30 transition">
-              Login
-            </button>
-          </Link>
+        <div className="hidden md:flex items-center gap-3">{authButtons}</div>
 
-          <Link to="/signup">
-            <button className="px-5 py-2 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-200 transition">
-              Sign Up
-            </button>
-          </Link>
-        </div>
-
-        {/* Hamburger */}
         <button
           className="md:hidden text-3xl text-gray-800"
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -111,28 +148,18 @@ const Navbar: React.FC = () => {
         </button>
       </div>
 
-      {/* MOBILE MENU */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full mt-3 left-1/2 -translate-x-1/2 w-[95%] 
-            bg-white/15 backdrop-blur-xl 
-            rounded-xl shadow-lg border border-white/25 
-            z-[9999]"
+            className="absolute top-full mt-3 left-1/2 -translate-x-1/2 w-[95%] bg-white/15 backdrop-blur-xl rounded-xl shadow-lg border border-white/25 z-[9999]"
           >
             <div className="flex flex-col p-5 gap-4 text-gray-800 font-medium">
+              <Link to="/" onClick={() => setMobileOpen(false)}>Home</Link>
 
-              <Link to="/" onClick={() => setMobileOpen(false)}>
-                Home
-              </Link>
-
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="text-left"
-              >
+              <button onClick={() => setIsOpen(!isOpen)} className="text-left">
                 Explore
               </button>
 
@@ -145,18 +172,22 @@ const Navbar: React.FC = () => {
                 </div>
               )}
 
-              <Link to="/about" onClick={() => setMobileOpen(false)}>
-                About Us
-              </Link>
+              <Link to="/about" onClick={() => setMobileOpen(false)}>About Us</Link>
 
-              <Link to="/login" onClick={() => setMobileOpen(false)}>
-                Login
-              </Link>
-
-              <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                Sign Up
-              </Link>
-
+              {auth ? (
+                <>
+                  <Link to={dashboardPath} onClick={() => setMobileOpen(false)}>Dashboard</Link>
+                  {isStudent && (
+                    <Link to="/apply" onClick={() => setMobileOpen(false)}>Apliko</Link>
+                  )}
+                  <button onClick={handleLogout} className="text-left">Dil</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setMobileOpen(false)}>Login</Link>
+                  <Link to="/signup" onClick={() => setMobileOpen(false)}>Sign Up</Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

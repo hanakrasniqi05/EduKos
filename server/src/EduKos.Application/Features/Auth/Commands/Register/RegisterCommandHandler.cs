@@ -23,7 +23,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
-            Role = request.Role
+            Role = request.Role,
+            InstitutionName = request.InstitutionName,
+            InstitutionTypeId = request.InstitutionTypeId,
+            City = request.City,
+            Website = request.Website
         };
 
         return await _authService.RegisterAsync(dto, cancellationToken);

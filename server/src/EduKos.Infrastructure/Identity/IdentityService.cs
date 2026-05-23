@@ -58,6 +58,24 @@ public class IdentityService : IAuthService
 
         await _context.Users.AddAsync(user, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (roleName == AppRoles.Shkolla && !string.IsNullOrWhiteSpace(request.InstitutionName) && request.InstitutionTypeId.HasValue)
+        {
+            await _context.Institutions.AddAsync(new Institution
+            {
+                InstitutionTypeId = request.InstitutionTypeId.Value,
+                OwnerUserId = user.UserId,
+                Name = request.InstitutionName.Trim(),
+                City = request.City?.Trim(),
+                Website = request.Website?.Trim(),
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                IsApproved = false
+            }, cancellationToken);
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
         return await BuildAuthResponseAsync(user, cancellationToken);
     }
 

@@ -18,4 +18,12 @@ public class RegisterCommand : IRequest<AuthResponseDto>
     public string? PhoneNumber { get; set; }
 
     public string Role { get; set; } = default!;
+
+    public string? InstitutionName { get; set; }
+
+    public int? InstitutionTypeId { get; set; }
+
+    public string? City { get; set; }
+
+    public string? Website { get; set; }
 }

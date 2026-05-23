@@ -1,77 +1,83 @@
 import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import AuthLayout, { AuthField, authButtonClass, authInputClass } from "../components/AuthLayout";
+import { getDashboardPath, login } from "../lib/api";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  console.log("Submit clicked");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const response = await fetch("http://localhost:5056/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const response = await login(email, password);
+      const from = (location.state as { from?: string } | null)?.from;
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed");
+      if (from && !from.startsWith("/dashboard")) {
+        navigate(from, { replace: true });
+      } else {
+        navigate(getDashboardPath(response.roles), { replace: true });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kyqja deshtoi.");
+    } finally {
+      setLoading(false);
     }
-
-    console.log("Login success:", data);
-    localStorage.setItem("token", data.accessToken); 
-
-  } catch (error: any) {
-    alert(error.message); 
-    console.error("Login error:", error.message);
-  }
-};
+  };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white rounded-lg shadow-md w-[600px]">
-        
-        <div className="bg-[#76C893] text-center py-3 rounded-t-lg font-semibold">
-          EduKos
-        </div>
+    <AuthLayout
+      title="Kyqu ne llogari"
+      subtitle="Vazhdo te paneli yt ne EduKos."
+      footer={
+        <>
+          Nuk ke llogari?{" "}
+          <Link to="/signup" className="font-semibold text-[#3d7a52] hover:underline">
+            Regjistrohu ketu
+          </Link>
+        </>
+      }
+    >
+      {error && (
+        <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
-        <form onSubmit={handleSubmit} className="p-10">
-          
-          <div className="mb-4">
-            <label className="block mb-1 text-sm">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-1/2 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Enter your email"
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthField label="Email">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className={authInputClass}
+            placeholder="email@shembull.com"
+          />
+        </AuthField>
 
-          <div className="mb-4">
-            <label className="block mb-1 text-sm">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-1/2 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Enter your password"
-            />
-          </div>
+        <AuthField label="Fjalekalimi">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className={authInputClass}
+            placeholder="Fjalekalimi"
+          />
+        </AuthField>
 
-          <div className="mt-6">
-            <button
-              type="submit"
-              className="bg-green-400 px-4 py-2 rounded-md hover:bg-green-500 transition"
-            >
-              Log In
-            </button>
-          </div>
-
-        </form>
-      </div>
-    </div>
+        <button type="submit" disabled={loading} className={authButtonClass}>
+          {loading ? "Duke u kyqur..." : "Kyqu"}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }

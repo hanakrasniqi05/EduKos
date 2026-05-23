@@ -5,7 +5,6 @@ import {
   type DashboardData,
   type ApplicationDto,
   type InstitutionDto,
-  ensureDashboardAuth,
   getDashboardData,
   unsaveInstitution,
   updateCurrentUser,
@@ -81,7 +80,6 @@ export default function UserDashboard() {
     async function load() {
       try {
         setLoading(true);
-        await ensureDashboardAuth();
         const dashboard = await getDashboardData();
         if (ignore) return;
         setData(dashboard);

@@ -1,4 +1,16 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5088/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+
+export const ROLES = {
+  Admin: "Admin",
+  Nxenes: "Nxenes",
+  Shkolla: "Shkolla",
+} as const;
+
+export function getDashboardPath(roles: string[]): string {
+  if (roles.includes(ROLES.Admin)) return "/dashboard/admin";
+  if (roles.includes(ROLES.Shkolla)) return "/dashboard/institution";
+  return "/dashboard/user";
+}
 
 export type AuthResponse = {
   userId: string;
@@ -89,12 +101,42 @@ export function getStoredAuth(): AuthResponse | null {
 export function storeAuth(auth: AuthResponse) {
   localStorage.setItem("edukos_auth", JSON.stringify(auth));
   localStorage.setItem("token", auth.accessToken);
+  window.dispatchEvent(new Event("edukos-auth-change"));
 }
 
 export function clearAuth() {
   localStorage.removeItem("edukos_auth");
   localStorage.removeItem("token");
+  window.dispatchEvent(new Event("edukos-auth-change"));
 }
+
+export type RegisterPayload = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  role: string;
+  institutionName?: string;
+  institutionTypeId?: number;
+  city?: string;
+  website?: string;
+};
+
+export type InstitutionProgramDto = {
+  programId: number;
+  institutionId: number;
+  name: string;
+  level?: string;
+  description?: string;
+  duration?: string;
+};
+
+export type InstitutionFullDetailsDto = {
+  institution: InstitutionDto;
+  programs: InstitutionProgramDto[];
+};
 
 async function request<T>(path: string, options: RequestInit = {}, retry = true): Promise<T> {
   const auth = getStoredAuth();
@@ -105,10 +147,16 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
     headers.set("Authorization", `Bearer ${auth.accessToken}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new Error("Could not reach the API. Start the backend server and try again.");
+  }
 
   if (response.status === 401 && retry && auth?.refreshToken) {
     const refreshed = await refreshToken(auth.refreshToken);
@@ -135,6 +183,16 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   return response.json() as Promise<T>;
 }
 
+export async function register(payload: RegisterPayload) {
+  const response = await request<AuthResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }, false);
+
+  storeAuth(response);
+  return response;
+}
+
 export async function login(email: string, password: string) {
   const response = await request<AuthResponse>("/auth/login", {
     method: "POST",
@@ -143,13 +201,6 @@ export async function login(email: string, password: string) {
 
   storeAuth(response);
   return response;
-}
-
-export async function ensureDashboardAuth() {
-  const auth = getStoredAuth();
-  if (auth?.accessToken) return auth;
-
-  return login("nxenes@edukos.com", "Nxenes123!");
 }
 
 export async function refreshToken(refreshTokenValue: string) {
@@ -201,6 +252,15 @@ export async function getMyApplications() {
   return request<ApplicationDto[]>("/applications/mine");
 }
 
+export async function getAllApplications(institutionId?: number) {
+  const query = institutionId ? `?institutionId=${institutionId}` : "";
+  return request<ApplicationDto[]>(`/applications${query}`);
+}
+
+export async function getAllUsers() {
+  return request<UserDto[]>("/users");
+}
+
 export async function getMyNotifications() {
   return request<NotificationDto[]>("/notifications/mine");
 }
@@ -218,6 +278,10 @@ export async function getInstitutionTypes() {
 
 export async function getInstitutionsByType(institutionTypeId: number) {
   return request<InstitutionDto[]>(`/institutions/by-type/${institutionTypeId}`);
+}
+
+export async function getInstitutionFullDetails(institutionId: number) {
+  return request<InstitutionFullDetailsDto>(`/institutions/${institutionId}/full-details`);
 }
 
 export async function submitApplication(data: Omit<ApplicationDto, "applicationId" | "createdAt" | "status" | "institutionName" | "userId">) {

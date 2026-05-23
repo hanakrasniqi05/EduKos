@@ -7,6 +7,7 @@ import {
 } from "../lib/api";
 import InstitutionFilters from "../sections/InstitutionFilters";
 import InstitutionGrid from "../sections/InstitutionGrid";
+import Footer from "../sections/Footer";
 
 type Props = {
   title: string;
@@ -135,6 +136,7 @@ const InstitutionListing: React.FC<Props> = ({
           error={error}
         />
       </section>
+      <Footer />
     </main>
   );
 };

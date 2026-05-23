@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import eduImage from "../assets/sifunksionon.png";
 
 const HomeSections = () => {
@@ -42,23 +43,24 @@ const HomeSections = () => {
             krahaso dhe zbulo cila shkollë është “perfect match” për ty.
           </p>
 
-          <motion.button
-            className="bg-[var(--color-green-light)] text-black font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out shadow-lg"
-            whileHover={{ 
+          <Link to="/shkollat-e-mesme">
+            <motion.span
+              className="inline-block bg-[var(--color-green-light)] text-black font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out shadow-lg"
+              whileHover={{ 
                 scale: 1.08, 
                 boxShadow: "0 25px 40px -5px rgba(153, 217, 140, 0.4)",
-                backgroundColor: "var(--color-emerald)"
-            }}
-            whileTap={{ scale: 0.95 }}
+              }}
+              whileTap={{ scale: 0.95 }}
             >
-            <motion.span
+              <motion.span
                 animate={{ x: [0, 2, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
                 className="inline-block"
-            >
+              >
                 Krahaso →
+              </motion.span>
             </motion.span>
-            </motion.button>
+          </Link>
         </motion.div>
       </section>
 
@@ -79,23 +81,24 @@ const HomeSections = () => {
         për të menaxhuar aplikimet në një vend.
         </p>
 
-        <motion.button
-            className="bg-[var(--color-green-light)] text-black font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out shadow-lg"
+        <Link to="/signup?role=Shkolla">
+          <motion.span
+            className="inline-block bg-[var(--color-green-light)] text-black font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out shadow-lg"
             whileHover={{ 
-                scale: 1.08, 
-                boxShadow: "0 25px 40px -5px rgba(153, 217, 140, 0.4)",
-                backgroundColor: "var(--color-emerald)"
+              scale: 1.08, 
+              boxShadow: "0 25px 40px -5px rgba(153, 217, 140, 0.4)",
             }}
             whileTap={{ scale: 0.95 }}
-            >
+          >
             <motion.span
-                animate={{ x: [0, 2, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="inline-block"
+              animate={{ x: [0, 2, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="inline-block"
             >
-                View more →
+              Regjistro institucionin →
             </motion.span>
-            </motion.button>
+          </motion.span>
+        </Link>
         </motion.div>
     </section>
     </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, type Variants } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import heroImg from "../assets/heroheaderimage.png";
 
 const HeroHeader: React.FC = () => {
@@ -102,24 +103,25 @@ const HeroHeader: React.FC = () => {
             nga parashkollori deri në universitet, në një vend të vetëm.
           </motion.p>
           
-          <motion.button 
-            className="bg-[var(--color-green-light)] hover:bg-[var(--color-emerald)] text-black font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out shadow-lg"
-            variants={itemVariants}
-            whileHover={{ 
-              scale: 1.08, 
-              boxShadow: "0 25px 40px -5px rgba(153, 217, 140, 0.4)",
-              backgroundColor: "var(--color-emerald)"
-            }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <Link to="/universitetet">
             <motion.span
-              animate={{ x: [0, 2, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="inline-block"
+              className="inline-block bg-[var(--color-green-light)] hover:bg-[var(--color-emerald)] text-black font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out shadow-lg"
+              variants={itemVariants}
+              whileHover={{ 
+                scale: 1.08, 
+                boxShadow: "0 25px 40px -5px rgba(153, 217, 140, 0.4)",
+              }}
+              whileTap={{ scale: 0.95 }}
             >
-              Fillo kërkimin →
+              <motion.span
+                animate={{ x: [0, 2, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="inline-block"
+              >
+                Fillo kërkimin →
+              </motion.span>
             </motion.span>
-          </motion.button>
+          </Link>
         </motion.div>
 
         <motion.div 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import logoImg from '../assets/edukos-green.png';
 
 const Footer: React.FC = () => {
@@ -16,11 +17,7 @@ const Footer: React.FC = () => {
       opacity: 1, 
       scale: 1, 
       rotate: 0,
-      transition: { 
-        stiffness: 100, 
-        damping: 15,
-        duration: 1.5, 
-      } 
+      transition: { stiffness: 100, damping: 15, duration: 1.5 } 
     },
     hover: {
       rotate: [0, -5, 5, -5, 0],
@@ -37,43 +34,43 @@ const Footer: React.FC = () => {
     }
   };
 
-  const socialIcons = ['f', '𝕏', '◉', 'in'];
   const linkSections = [
     {
       title: 'Kërkoni',
       delay: 0.1,
-      links: ['Shkollat', 'Programet', 'Universitetet', 'Aftësimet']
+      links: [
+        { label: 'Çerdhet', to: '/cerdhet' },
+        { label: 'Shkollat Fillore', to: '/shkollat-fillore' },
+        { label: 'Shkollat e Mesme', to: '/shkollat-e-mesme' },
+        { label: 'Universitetet', to: '/universitetet' },
+      ]
     },
     {
-      title: 'Lajme',
+      title: 'Llogaria',
       delay: 0.2,
-      links: ['Rreth nesh', 'Blog', 'Të ardhura', 'Punë']
+      links: [
+        { label: 'Kyqu', to: '/login' },
+        { label: 'Regjistrohu', to: '/signup' },
+        { label: 'Dashboard', to: '/dashboard' },
+        { label: 'Apliko', to: '/apply' },
+      ]
     },
     {
       title: 'Ndihme',
       delay: 0.3,
-      links: ['Privatësia', 'Kushtet', 'FAQ', 'Suporta']
+      links: [
+        { label: 'Rreth nesh', to: '/about' },
+        { label: 'Kryefaqja', to: '/' },
+      ]
     }
   ];
 
-  const FooterLink = ({ label }: { label: string }) => (
+  const FooterLink = ({ label, to }: { label: string; to: string }) => (
     <motion.li whileHover="hover" variants={linkHoverVariants}>
-      <a href="#" className="text-gray-600 hover:text-[var(--color-ocean-mist)] transition duration-200 text-sm">
+      <Link to={to} className="text-gray-600 hover:text-[var(--color-ocean-mist)] transition duration-200 text-sm">
         {label}
-      </a>
+      </Link>
     </motion.li>
-  );
-
-  const SocialIcon = ({ icon }: { icon: string }) => (
-    <motion.a 
-      href="#" 
-      className="w-9 h-9 rounded-full bg-white/20 hover:bg-[var(--color-ocean-mist)]/20 flex items-center justify-center text-gray-700 hover:text-[var(--color-ocean-mist)] transition duration-200 text-sm font-semibold"
-      whileHover={{ scale: 1.2, rotate: 360 }}
-      whileTap={{ scale: 0.9 }}
-      transition={{ type: "spring", stiffness: 100, damping: 20 }}
-    >
-      {icon}
-    </motion.a>
   );
 
   return (
@@ -100,20 +97,22 @@ const Footer: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <motion.div
-              variants={logoVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              whileHover="hover"
-              className="mb-4 cursor-pointer w-fit"
-            >
-              <img 
-                src={logoImg}
-                alt="EduKos" 
-                className="h-12 w-auto drop-shadow-lg hover:drop-shadow-xl transition-all"
-              />
-            </motion.div>
+            <Link to="/">
+              <motion.div
+                variants={logoVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                whileHover="hover"
+                className="mb-4 cursor-pointer w-fit"
+              >
+                <img 
+                  src={logoImg}
+                  alt="EduKos" 
+                  className="h-12 w-auto drop-shadow-lg hover:drop-shadow-xl transition-all"
+                />
+              </motion.div>
+            </Link>
             <p className="text-gray-600 text-sm leading-relaxed">
               Gjej rrugën e arsimit ideal për ty.
             </p>
@@ -128,33 +127,16 @@ const Footer: React.FC = () => {
               viewport={{ once: true }}
               transition={{ delay: section.delay }}
             >
-              <h4 className="text-base md:text-lg font-semibold text-gray-900 mb-4 uppercase tracking-wide hover:text-[var(--color-ocean-mist)] transition duration-300 cursor-default">
+              <h4 className="text-base md:text-lg font-semibold text-gray-900 mb-4 uppercase tracking-wide">
                 {section.title}
               </h4>
               <ul className="space-y-3">
                 {section.links.map((link) => (
-                  <FooterLink key={link} label={link} />
+                  <FooterLink key={link.label} label={link.label} to={link.to} />
                 ))}
               </ul>
             </motion.div>
           ))}
-
-          <motion.div 
-            variants={sectionVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-          >
-            <h4 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide hover:text-[var(--color-ocean-mist)] transition duration-300 cursor-default">
-              Ndiq
-            </h4>
-            <div className="flex gap-4">
-              {socialIcons.map((icon) => (
-                <SocialIcon key={icon} icon={icon} />
-              ))}
-            </div>
-          </motion.div>
         </div>
 
         <motion.div 
