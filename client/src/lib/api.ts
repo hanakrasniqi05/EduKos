@@ -54,6 +54,27 @@ export type InstitutionTypeDto = {
   name: string;
 };
 
+export type ReviewDto = {
+  reviewId: number;
+  userId: number;
+  institutionId: number;
+  teachingQualityRating?: number;
+  facilitiesRating?: number;
+  difficultyRating?: number;
+  staffRating?: number;
+  comment?: string;
+  createdAt: string;
+};
+
+export type UserCreatePayload = {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  isActive?: boolean;
+};
+
 export type NotificationDto = {
   notificationId: number;
   userId: number;
@@ -108,6 +129,32 @@ export function clearAuth() {
   localStorage.removeItem("edukos_auth");
   localStorage.removeItem("token");
   window.dispatchEvent(new Event("edukos-auth-change"));
+}
+
+export function isAccessTokenExpired(auth: AuthResponse): boolean {
+  const expiresAt = new Date(auth.accessTokenExpiresAt).getTime();
+  return Number.isNaN(expiresAt) || Date.now() >= expiresAt - 60_000;
+}
+
+export async function restoreSession(): Promise<AuthResponse | null> {
+  const auth = getStoredAuth();
+  if (!auth) return null;
+
+  if (!isAccessTokenExpired(auth)) return auth;
+
+  if (!auth.refreshToken) {
+    clearAuth();
+    return null;
+  }
+
+  try {
+    const refreshed = await refreshToken(auth.refreshToken);
+    storeAuth(refreshed);
+    return refreshed;
+  } catch {
+    clearAuth();
+    return null;
+  }
 }
 
 export type RegisterPayload = {
@@ -242,6 +289,16 @@ export async function getMySavedInstitutions() {
   return request<InstitutionDto[]>("/savedinstitutions/mine/institutions");
 }
 
+export async function saveInstitution(institutionId: number) {
+  return request<{ savedInstitutionId: number; userId: number; institutionId: number }>(
+    "/savedinstitutions/save",
+    {
+      method: "POST",
+      body: JSON.stringify({ institutionId }),
+    },
+  );
+}
+
 export async function unsaveInstitution(institutionId: number) {
   return request<void>(`/savedinstitutions/unsave/${institutionId}`, {
     method: "DELETE",
@@ -289,6 +346,108 @@ export async function submitApplication(data: Omit<ApplicationDto, "applicationI
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+export async function createUser(data: UserCreatePayload) {
+  return request<UserDto>("/users", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateUser(id: number, data: Partial<UserDto>) {
+  return request<void>(`/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      userId: id,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phoneNumber: data.phoneNumber,
+      isActive: data.isActive ?? true,
+      createdAt: data.createdAt ?? new Date().toISOString(),
+      roles: data.roles ?? [],
+    }),
+  });
+}
+
+export async function deleteUser(id: number) {
+  return request<void>(`/users/${id}`, { method: "DELETE" });
+}
+
+export async function createInstitution(
+  data: Omit<InstitutionDto, "institutionId" | "createdAt" | "institutionTypeName">,
+) {
+  return request<InstitutionDto>("/institutions", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateInstitution(id: number, data: InstitutionDto) {
+  return request<void>(`/institutions/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...data, institutionId: id }),
+  });
+}
+
+export async function deleteInstitution(id: number) {
+  return request<void>(`/institutions/${id}`, { method: "DELETE" });
+}
+
+export async function createInstitutionType(name: string) {
+  return request<InstitutionTypeDto>("/InstitutionTypes", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function updateInstitutionType(id: number, data: InstitutionTypeDto) {
+  return request<void>(`/InstitutionTypes/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...data, institutionTypeId: id }),
+  });
+}
+
+export async function deleteInstitutionType(id: number) {
+  return request<void>(`/InstitutionTypes/${id}`, { method: "DELETE" });
+}
+
+export async function getReviews() {
+  return request<ReviewDto[]>("/reviews");
+}
+
+export async function deleteReview(id: number) {
+  return request<void>(`/reviews/${id}`, { method: "DELETE" });
+}
+
+export async function updateApplicationStatus(id: number, status: string) {
+  return request<ApplicationDto>(`/applications/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export type AdminDashboardData = {
+  user: UserDto;
+  users: UserDto[];
+  institutions: InstitutionDto[];
+  institutionTypes: InstitutionTypeDto[];
+  reviews: ReviewDto[];
+  applications: ApplicationDto[];
+};
+
+export async function getAdminDashboardData(): Promise<AdminDashboardData> {
+  const [user, users, institutions, institutionTypes, reviews, applications] = await Promise.all([
+    getCurrentUser(),
+    getAllUsers(),
+    getInstitutions(),
+    getInstitutionTypes(),
+    getReviews(),
+    getAllApplications(),
+  ]);
+
+  return { user, users, institutions, institutionTypes, reviews, applications };
 }
 
 export async function getDashboardData(): Promise<DashboardData> {

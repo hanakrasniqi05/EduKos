@@ -1,5 +1,7 @@
+import React, { useEffect, useState } from "react";
 import InstitutionCard from "../sections/InstitutionCard";
-import type { InstitutionDto } from "../lib/api";
+import { getMySavedInstitutions, type InstitutionDto } from "../lib/api";
+import { useOptionalAuth } from "../context/AuthContext";
 
 type Props = {
   institutions: InstitutionDto[];
@@ -8,6 +10,42 @@ type Props = {
 };
 
 const InstitutionGrid: React.FC<Props> = ({ institutions, loading, error }) => {
+  const authContext = useOptionalAuth();
+  const auth = authContext?.auth ?? null;
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!auth?.accessToken) {
+      setSavedIds(new Set());
+      return;
+    }
+
+    let ignore = false;
+
+    getMySavedInstitutions()
+      .then((saved) => {
+        if (!ignore) {
+          setSavedIds(new Set(saved.map((item) => item.institutionId)));
+        }
+      })
+      .catch(() => {
+        if (!ignore) setSavedIds(new Set());
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [auth?.accessToken]);
+
+  function handleSavedChange(institutionId: number, saved: boolean) {
+    setSavedIds((current) => {
+      const next = new Set(current);
+      if (saved) next.add(institutionId);
+      else next.delete(institutionId);
+      return next;
+    });
+  }
+
   if (loading) {
     return <p className="mt-12 text-center text-gray-600">Duke u ngarkuar...</p>;
   }
@@ -39,6 +77,8 @@ const InstitutionGrid: React.FC<Props> = ({ institutions, loading, error }) => {
         <InstitutionCard
           key={institution.institutionId}
           institution={institution}
+          isSaved={savedIds.has(institution.institutionId)}
+          onSavedChange={handleSavedChange}
         />
       ))}
     </section>

@@ -2,31 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../assets/edukos-green.png";
-import {
-  ROLES,
-  clearAuth,
-  getDashboardPath,
-  getStoredAuth,
-  logout,
-  type AuthResponse,
-} from "../lib/api";
+import { ROLES, getDashboardPath } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const [auth, setAuth] = useState<AuthResponse | null>(() => getStoredAuth());
+  const { auth, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const syncAuth = () => setAuth(getStoredAuth());
-    window.addEventListener("edukos-auth-change", syncAuth);
-    window.addEventListener("storage", syncAuth);
-    return () => {
-      window.removeEventListener("edukos-auth-change", syncAuth);
-      window.removeEventListener("storage", syncAuth);
-    };
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,11 +28,7 @@ const Navbar: React.FC = () => {
   const dashboardPath = auth ? getDashboardPath(roles) : "/dashboard";
 
   async function handleLogout() {
-    try {
-      await logout();
-    } catch {
-      clearAuth();
-    }
+    await logout();
     setMobileOpen(false);
     navigate("/");
   }

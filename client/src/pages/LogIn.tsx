@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthLayout, { AuthField, authButtonClass, authInputClass } from "../components/AuthLayout";
-import { getDashboardPath, login } from "../lib/api";
+import { getDashboardPath } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
