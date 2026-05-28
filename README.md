@@ -58,27 +58,58 @@ Requirements:
 
 - .NET 10 SDK
 - SQL Server LocalDB or SQL Server
+- Node.js and npm
 
-Commands:
+Use these commands from the repository root:
 
 ```powershell
 dotnet restore server\server.slnx
 dotnet ef database update --project server\src\EduKos.Infrastructure --startup-project server\src\EduKos.API --context AppDbContext
-dotnet run --project server\src\EduKos.API --urls http://localhost:5088
+dotnet run --project server\src\EduKos.API\EduKos.API.csproj
 ```
 
+Do not run `server\src\EduKos.Infrastructure\EduKos.Infrastructure.csproj` directly. It is a class library for EF Core/database code, not the runnable API project.
+
 The API will also apply migrations and seed roles/users on startup.
+
+The local API will be available at:
+
+```text
+http://localhost:5056
+```
 
 OpenAPI is available in development mode:
 
 ```text
-http://localhost:5088/openapi/v1.json
+http://localhost:5056/openapi/v1.json
 ```
 
 Scalar API reference is available at:
 
 ```text
-http://localhost:5088/scalar/v1
+http://localhost:5056/scalar/v1
+```
+
+Start the frontend in a second terminal:
+
+```powershell
+cd client
+npm install
+npm run dev
+```
+
+The frontend will be available at:
+
+```text
+http://localhost:5173
+```
+
+Useful frontend pages:
+
+```text
+http://localhost:5173
+http://localhost:5173/dashboard
+http://localhost:5173/apply
 ```
 
 ## Run With Docker
@@ -97,6 +128,21 @@ The API will be available at:
 
 ```text
 http://localhost:5088
+```
+
+When using Docker for the API and local Vite for the frontend, start the frontend with:
+
+```powershell
+cd client
+$env:VITE_API_BASE_URL="http://localhost:5088/api"
+npm install
+npm run dev
+```
+
+The frontend will still be available at:
+
+```text
+http://localhost:5173
 ```
 
 SQL Server will be available from the host at:
@@ -120,6 +166,8 @@ docker compose down -v
 ```
 
 ## Authentication Examples
+
+The examples below use the Docker API port `5088`. If you are running the API locally without Docker, replace `http://localhost:5088` with `http://localhost:5056`.
 
 Register:
 

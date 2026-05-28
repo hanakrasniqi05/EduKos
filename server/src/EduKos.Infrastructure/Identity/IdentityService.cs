@@ -144,7 +144,7 @@ public class IdentityService : IAuthService
         var refreshTokenValue = await _tokenService.GenerateRefreshTokenAsync();
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenDays);
 
-        _context.RefreshTokens.Add(new RefreshToken
+        _context.RefreshTokens.Add(new EduKos.Domain.Entities.RefreshToken
         {
             UserId = user.UserId,
             Token = _tokenService.HashRefreshToken(refreshTokenValue),
