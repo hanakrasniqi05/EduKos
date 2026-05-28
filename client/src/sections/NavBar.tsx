@@ -78,11 +78,11 @@ const Navbar: React.FC = () => {
   return (
     <nav className="w-full flex justify-center mt-4 relative z-[9999]">
       <div className="w-[95%] md:w-[90%] bg-[var(--color-emerald)]/70 backdrop-blur-md rounded-2xl px-6 py-3 flex items-center justify-between shadow-lg border border-white/20 relative">
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3 z-10">
           <img src={logoImg} alt="Logo" className="h-10 w-auto" />
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-gray-800 font-medium">
+        <div className="hidden md:flex items-center gap-8 text-gray-800 font-medium absolute left-1/2 -translate-x-1/2">
           <Link to="/" className="hover:text-white transition">
             Home
           </Link>
@@ -116,9 +116,13 @@ const Navbar: React.FC = () => {
           <Link to="/about" className="hover:text-white transition">
             About Us
           </Link>
+
+          <Link to="/krahaso" className="hover:text-white transition">
+            Krahaso
+          </Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-3">{authButtons}</div>
+        <div className="hidden md:flex items-center gap-3 z-10">{authButtons}</div>
 
         <button
           className="md:hidden text-3xl text-gray-800"
@@ -153,6 +157,10 @@ const Navbar: React.FC = () => {
               )}
 
               <Link to="/about" onClick={() => setMobileOpen(false)}>About Us</Link>
+
+              <Link to="/krahaso" onClick={() => setMobileOpen(false)}>
+                Krahaso
+              </Link>
 
               {auth ? (
                 <>

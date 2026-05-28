@@ -14,6 +14,7 @@ import Apply from "../pages/Apply";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardRedirect from "../components/DashboardRedirect";
 import { ROLES } from "../lib/api";
+import Krahaso from "../pages/Krahaso"
 
 const App: React.FC = () => {
   return (
@@ -70,6 +71,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<LogIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/krahaso" element={<Krahaso />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
