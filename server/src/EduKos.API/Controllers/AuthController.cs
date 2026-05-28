@@ -53,6 +53,10 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(new { message = "Invalid credentials" });
         }
+        catch (InvalidOperationException ex)
+{
+    return BadRequest(new { message = ex.Message });
+}
     }
 
     [HttpPost("refresh")]

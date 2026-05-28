@@ -508,13 +508,23 @@ function InstitutionsSection({
                 <td className="py-2 pr-4 text-gray-500">{inst.institutionTypeName ?? inst.institutionTypeId}</td>
                 <td className="py-2 pr-4">{inst.city || "—"}</td>
                 <td className="py-2 pr-4">
-                  <button
-                    type="button"
-                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${inst.isApproved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}
-                    onClick={() => onUpdate(inst.institutionId, { ...inst, isApproved: !inst.isApproved })}
+                  <select
+                    value={inst.isApproved ? "approved" : "pending"}
+                    onChange={(e) =>
+                      onUpdate(inst.institutionId, {
+                        ...inst,
+                        isApproved: e.target.value === "approved",
+                      })
+                    }
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold outline-none ${
+                      inst.isApproved
+                        ? "border-emerald-200 bg-emerald-100 text-emerald-700"
+                        : "border-amber-200 bg-amber-100 text-amber-700"
+                    }`}
                   >
-                    {inst.isApproved ? "Aprovuar" : "Ne pritje"}
-                  </button>
+                    <option value="pending">Ne pritje</option>
+                    <option value="approved">Aprovuar</option>
+                  </select>
                 </td>
                 <td className="py-2">
                   <button type="button" className={btnDanger} onClick={() => { if (confirm("Fshi institucionin?")) onDelete(inst.institutionId); }}>Fshi</button>

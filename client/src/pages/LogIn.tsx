@@ -20,6 +20,10 @@ export default function Login() {
 
     try {
       const response = await login(email, password);
+      if (response.roles.includes("Shkolla") && response.institutionIsApproved === false) {
+        navigate("/waiting-approval", { replace: true });
+        return;
+      }
       const from = (location.state as { from?: string } | null)?.from;
 
       if (from && !from.startsWith("/dashboard")) {

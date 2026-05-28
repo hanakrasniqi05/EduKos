@@ -31,6 +31,12 @@ export default function ProtectedRoute({ children, roles }: Props) {
       return <Navigate to={getDashboardPath(userRoles)} replace />;
     }
   }
-
+if (
+  auth.roles?.includes("Shkolla") &&
+  auth.institutionIsApproved === false &&
+  location.pathname !== "/waiting-approval"
+) {
+  return <Navigate to="/waiting-approval" replace />;
+}
   return <>{children}</>;
 }

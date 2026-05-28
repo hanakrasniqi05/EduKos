@@ -15,4 +15,6 @@ public class AuthResponseDto
     public DateTime RefreshTokenExpiresAt { get; set; }
 
     public IList<string> Roles { get; set; } = new List<string>();
+
+    public bool? InstitutionIsApproved { get; set; }
 }

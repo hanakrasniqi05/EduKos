@@ -15,6 +15,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardRedirect from "../components/DashboardRedirect";
 import { ROLES } from "../lib/api";
 import Krahaso from "../pages/Krahaso"
+import WaitingApproval from "../pages/WaitingApproval";
 
 const App: React.FC = () => {
   return (
@@ -73,6 +74,7 @@ const App: React.FC = () => {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/krahaso" element={<Krahaso />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/waiting-approval" element={<WaitingApproval />} />
       </Routes>
     </>
   );

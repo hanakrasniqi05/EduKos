@@ -20,6 +20,7 @@ export type AuthResponse = {
   accessTokenExpiresAt: string;
   refreshTokenExpiresAt: string;
   roles: string[];
+  institutionIsApproved?: boolean | null;
 };
 
 export type UserDto = {

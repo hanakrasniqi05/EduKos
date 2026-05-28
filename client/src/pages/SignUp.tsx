@@ -94,7 +94,11 @@ export default function SignUp() {
         website: role === ROLES.Shkolla ? website.trim() || undefined : undefined,
       });
 
-      navigate(getDashboardPath(response.roles), { replace: true });
+      if (response.roles.includes(ROLES.Shkolla) && response.institutionIsApproved === false) {
+          navigate("/waiting-approval", { replace: true });
+        } else {
+          navigate(getDashboardPath(response.roles), { replace: true });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Regjistrimi deshtoi.");
     } finally {

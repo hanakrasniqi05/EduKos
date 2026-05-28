@@ -116,6 +116,7 @@ public class IdentityService : IAuthService
 
         token.RevokedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
+
         return await BuildAuthResponseAsync(token.User, cancellationToken);
     }
 
@@ -133,12 +134,23 @@ public class IdentityService : IAuthService
     private async Task<AuthResponseDto> BuildAuthResponseAsync(User user, CancellationToken cancellationToken)
     {
         var roles = user.UserRoles.Select(x => x.Role.Name).ToList();
+
         if (roles.Count == 0)
         {
             roles = await _context.UserRoles
                 .Where(x => x.UserId == user.UserId)
                 .Select(x => x.Role.Name)
                 .ToListAsync(cancellationToken);
+        }
+
+        bool? institutionIsApproved = null;
+
+        if (roles.Contains(AppRoles.Shkolla))
+        {
+            institutionIsApproved = await _context.Institutions
+                .Where(x => x.OwnerUserId == user.UserId)
+                .Select(x => x.IsApproved)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         var refreshTokenValue = await _tokenService.GenerateRefreshTokenAsync();
@@ -150,6 +162,7 @@ public class IdentityService : IAuthService
             Token = _tokenService.HashRefreshToken(refreshTokenValue),
             ExpiresAt = refreshTokenExpiresAt
         });
+
         await _context.SaveChangesAsync(cancellationToken);
 
         return new AuthResponseDto
@@ -160,7 +173,8 @@ public class IdentityService : IAuthService
             RefreshToken = refreshTokenValue,
             AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
             RefreshTokenExpiresAt = refreshTokenExpiresAt,
-            Roles = roles
+            Roles = roles,
+            InstitutionIsApproved = institutionIsApproved
         };
     }
 }
