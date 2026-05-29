@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   getInstitutionTypes,
-  getInstitutionsByType,
+  searchInstitutions,
   type InstitutionDto,
   type InstitutionTypeDto,
 } from "../lib/api";
@@ -35,6 +35,45 @@ const InstitutionListing: React.FC<Props> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [minTuition, setMinTuition] = useState("");
+  const [maxTuition, setMaxTuition] = useState("");
+  const [minRating, setMinRating] = useState("");
+  const [language, setLanguage] = useState("");
+  const [ownership, setOwnership] = useState("");
+
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [debouncedCity, setDebouncedCity] = useState(cityFilter);
+  const [debouncedMinTuition, setDebouncedMinTuition] = useState(minTuition);
+  const [debouncedMaxTuition, setDebouncedMaxTuition] = useState(maxTuition);
+  const [debouncedMinRating, setDebouncedMinRating] = useState(minRating);
+  const [debouncedLanguage, setDebouncedLanguage] = useState(language);
+  const [debouncedOwnership, setDebouncedOwnership] = useState(ownership);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedCity(cityFilter);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [cityFilter]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMinTuition(minTuition);
+      setDebouncedMaxTuition(maxTuition);
+      setDebouncedMinRating(minRating);
+      setDebouncedLanguage(language);
+      setDebouncedOwnership(ownership);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [minTuition, maxTuition, minRating, language, ownership]);
+
   useEffect(() => {
     async function loadInstitutions() {
       try {
@@ -55,9 +94,17 @@ const InstitutionListing: React.FC<Props> = ({
           return;
         }
 
-        const data = await getInstitutionsByType(
-          selectedType.institutionTypeId
-        );
+        const data = await searchInstitutions({
+          institutionTypeId: selectedType.institutionTypeId,
+          name: debouncedSearch || undefined,
+          city: debouncedCity || undefined,
+          minTuitionFee: debouncedMinTuition ? parseFloat(debouncedMinTuition) : undefined,
+          maxTuitionFee: debouncedMaxTuition ? parseFloat(debouncedMaxTuition) : undefined,
+          minRating: debouncedMinRating ? parseFloat(debouncedMinRating) : undefined,
+          language: debouncedLanguage || undefined,
+          institutionOwnership: debouncedOwnership || undefined,
+          isApproved: true,
+        });
 
         setInstitutions(data);
       } catch (err) {
@@ -68,7 +115,7 @@ const InstitutionListing: React.FC<Props> = ({
     }
 
     loadInstitutions();
-  }, [typeNames]);
+  }, [typeNames, debouncedSearch, debouncedCity, debouncedMinTuition, debouncedMaxTuition, debouncedMinRating, debouncedLanguage, debouncedOwnership]);
 
   const cities = useMemo(() => {
     return Array.from(
@@ -80,22 +127,6 @@ const InstitutionListing: React.FC<Props> = ({
     );
   }, [institutions]);
 
-  const filteredInstitutions = useMemo(() => {
-    return institutions.filter((institution) => {
-      const searchValue = search.toLowerCase();
-
-      const matchesSearch =
-        institution.name.toLowerCase().includes(searchValue) ||
-        institution.description?.toLowerCase().includes(searchValue) ||
-        institution.location?.toLowerCase().includes(searchValue) ||
-        institution.city?.toLowerCase().includes(searchValue);
-
-      const matchesCity = cityFilter ? institution.city === cityFilter : true;
-
-      return matchesSearch && matchesCity;
-    });
-  }, [institutions, search, cityFilter]);
-
   return (
     <main className="min-h-screen bg-[#f7fbf3] px-5 md:px-10 py-10">
       <section className="mx-auto max-w-7xl">
@@ -104,20 +135,17 @@ const InstitutionListing: React.FC<Props> = ({
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">
               Explore EduKos
             </p>
-
             <h1 className="mt-3 text-4xl font-extrabold text-gray-950 md:text-5xl">
               {title}
             </h1>
-
             <p className="mt-3 max-w-xl text-base text-gray-600">
               {description}
             </p>
           </div>
-
           <div className="w-fit rounded-3xl border border-emerald-100 bg-white px-6 py-4 shadow-sm">
             <p className="text-sm text-gray-500">Institucione</p>
             <p className="text-4xl font-extrabold text-emerald-700">
-              {filteredInstitutions.length}
+              {institutions.length}
             </p>
           </div>
         </div>
@@ -128,10 +156,20 @@ const InstitutionListing: React.FC<Props> = ({
           cityFilter={cityFilter}
           setCityFilter={setCityFilter}
           cities={cities}
+          minTuition={minTuition}
+          setMinTuition={setMinTuition}
+          maxTuition={maxTuition}
+          setMaxTuition={setMaxTuition}
+          minRating={minRating}
+          setMinRating={setMinRating}
+          language={language}
+          setLanguage={setLanguage}
+          ownership={ownership}
+          setOwnership={setOwnership}
         />
 
         <InstitutionGrid
-          institutions={filteredInstitutions}
+          institutions={institutions}
           loading={loading}
           error={error}
         />

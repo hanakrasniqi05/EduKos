@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import InstitutionCard from "../sections/InstitutionCard";
-import { getMySavedInstitutions, type InstitutionDto } from "../lib/api";
-import { useOptionalAuth } from "../context/AuthContext";
+import React from "react";
+import { type InstitutionDto } from "../lib/api";
+import InstitutionCard from "./InstitutionCard";
 
 type Props = {
   institutions: InstitutionDto[];
@@ -10,78 +9,46 @@ type Props = {
 };
 
 const InstitutionGrid: React.FC<Props> = ({ institutions, loading, error }) => {
-  const authContext = useOptionalAuth();
-  const auth = authContext?.auth ?? null;
-  const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
-
-  useEffect(() => {
-    if (!auth?.accessToken) {
-      setSavedIds(new Set());
-      return;
-    }
-
-    let ignore = false;
-
-    getMySavedInstitutions()
-      .then((saved) => {
-        if (!ignore) {
-          setSavedIds(new Set(saved.map((item) => item.institutionId)));
-        }
-      })
-      .catch(() => {
-        if (!ignore) setSavedIds(new Set());
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [auth?.accessToken]);
-
-  function handleSavedChange(institutionId: number, saved: boolean) {
-    setSavedIds((current) => {
-      const next = new Set(current);
-      if (saved) next.add(institutionId);
-      else next.delete(institutionId);
-      return next;
-    });
-  }
-
   if (loading) {
-    return <p className="mt-12 text-center text-gray-600">Duke u ngarkuar...</p>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-white rounded-3xl shadow-sm p-6 animate-pulse">
+            <div className="h-48 bg-gray-200 rounded-2xl mb-4" />
+            <div className="h-6 bg-gray-200 rounded w-3/4 mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-full mb-1" />
+            <div className="h-4 bg-gray-200 rounded w-2/3" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="mt-12 rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
-        {error}
+      <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center">
+        <p className="text-red-600">{error}</p>
       </div>
     );
   }
 
   if (institutions.length === 0) {
     return (
-      <div className="mt-12 rounded-3xl border border-gray-200 bg-white p-10 text-center">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Nuk u gjet asnjë institucion
-        </h2>
-        <p className="mt-2 text-gray-600">
-          Provo të ndryshosh kërkimin ose qytetin.
+      <div className="bg-white rounded-3xl border border-emerald-100 p-12 text-center">
+        <p className="text-gray-500 text-lg">Nuk u gjet asnjë institucion.</p>
+        <p className="text-gray-400 text-sm mt-2">
+          Provoni të ndryshoni filtrat e kërkimit.
         </p>
       </div>
     );
   }
 
   return (
-    <section className="grid grid-cols-1 gap-7 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {institutions.map((institution) => (
-        <InstitutionCard
-          key={institution.institutionId}
-          institution={institution}
-          isSaved={savedIds.has(institution.institutionId)}
-          onSavedChange={handleSavedChange}
-        />
+        <InstitutionCard key={institution.institutionId} institution={institution} />
       ))}
-    </section>
+    </div>
   );
 };
 

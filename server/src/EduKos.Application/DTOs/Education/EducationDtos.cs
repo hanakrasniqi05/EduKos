@@ -188,6 +188,11 @@ public class InstitutionSearchRequestDto
     public int? InstitutionTypeId { get; set; }
     public string? Program { get; set; }
     public bool? IsApproved { get; set; }
+    public decimal? MinTuitionFee { get; set; }
+    public decimal? MaxTuitionFee { get; set; }
+    public double? MinRating { get; set; }
+    public string? Language { get; set; }
+    public string? InstitutionOwnership { get; set; }
 }
 
 public class SaveInstitutionRequestDto

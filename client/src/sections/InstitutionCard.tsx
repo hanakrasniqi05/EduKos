@@ -105,10 +105,6 @@ const InstitutionCard: React.FC<Props> = ({
             <span className="font-semibold">Location:</span>{" "}
             {institution.location || institution.address || "Not specified"}
           </p>
-          <p>
-            <span className="font-semibold">Contact:</span>{" "}
-            {institution.phone || institution.email || "Not specified"}
-          </p>
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-2">

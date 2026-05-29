@@ -49,6 +49,8 @@ export type InstitutionDto = {
   isApproved: boolean;
   createdAt: string;
   institutionTypeName?: string;
+  language?: string;
+  institutionOwnership?: string;
 };
 
 export type InstitutionTypeDto = {
@@ -746,4 +748,33 @@ export async function deleteAnnouncement(id: number): Promise<void> {
   return request<void>(`/institution-announcements/${id}`, {
     method: "DELETE",
   });
+}
+
+export type SearchInstitutionsParams = {
+  name?: string;
+  city?: string;
+  category?: string;
+  institutionTypeId?: number;
+  program?: string;
+  isApproved?: boolean;
+  minTuitionFee?: number;
+  maxTuitionFee?: number;
+  minRating?: number;
+  language?: string;
+  institutionOwnership?: string;
+};
+
+export async function searchInstitutions(params: SearchInstitutionsParams): Promise<InstitutionDto[]> {
+  const queryParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      queryParams.append(key, value.toString());
+    }
+  });
+  
+  const queryString = queryParams.toString();
+  const url = `/institutions/search${queryString ? `?${queryString}` : ""}`;
+  
+  return request<InstitutionDto[]>(url);
 }
