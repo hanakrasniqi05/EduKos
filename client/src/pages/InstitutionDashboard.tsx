@@ -6,6 +6,7 @@ import InstitutionPrograms from "../components/InstitutionPrograms";
 import InstitutionStaff from "../components/InstitutionStaff";
 import InstitutionFacilities from "../components/InstitutionFacilities";
 import InstitutionAnnouncements from "../components/InstitutionAnnouncements";
+import ApplicationsTab from "../components/ApplicationsTab";
 
 type Tab =
   | "overview"
@@ -13,7 +14,8 @@ type Tab =
   | "programs"
   | "staff"
   | "facilities"
-  | "announcements";
+  | "announcements"
+  | "applications"; 
 
 export default function InstitutionDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -32,6 +34,8 @@ export default function InstitutionDashboard() {
         return <InstitutionFacilities />;
       case "announcements":
         return <InstitutionAnnouncements />;
+        case "applications":  
+        return <ApplicationsTab />;
       default:
         return <InstitutionOverview />;
     }

@@ -10,7 +10,8 @@ type Tab =
   | "programs"
   | "staff"
   | "facilities"
-  | "announcements";
+  | "announcements"
+  | "applications";
 
 interface Props {
   activeTab: Tab;
@@ -46,6 +47,7 @@ export default function InstitutionDashboardHeader({
     { key: "staff", label: "Staff" },
     { key: "facilities", label: "Facilities" },
     { key: "announcements", label: "Announcements" },
+    { key: "applications", label: "Applications" },
   ];
 
   return (
