@@ -50,6 +50,7 @@ export type InstitutionDto = {
   createdAt: string;
   institutionTypeName?: string;
 };
+
 export type InstitutionTypeDto = {
   institutionTypeId: number;
   name: string;
@@ -108,8 +109,57 @@ export type DashboardData = {
   recommendations: InstitutionDto[];
 };
 
+export type InstitutionProgramDto = {
+  programId: number;
+  institutionId: number;
+  name: string;
+  level?: string;
+  description?: string;
+  duration?: string;
+  tuitionFee?: number;
+  ects?: number;
+};
+
+export type InstitutionStaffDto = {
+  staffId: number;
+  institutionId: number;
+  fullName: string;
+  position?: string;
+  photoFileId?: number;
+};
+
+export type InstitutionFacilityDto = {
+  facilityId: number;
+  institutionId: number;
+  name: string;
+  description?: string;
+};
+
+export type InstitutionAnnouncementDto = {
+  announcementId: number;
+  institutionId: number;
+  title: string;
+  content?: string;
+  createdAt: string;
+};
+
+export type InstitutionFullDetailsDto = {
+  institution: InstitutionDto;
+  programs: InstitutionProgramDto[];
+};
+
+export type AdminDashboardData = {
+  user: UserDto;
+  users: UserDto[];
+  institutions: InstitutionDto[];
+  institutionTypes: InstitutionTypeDto[];
+  reviews: ReviewDto[];
+  applications: ApplicationDto[];
+};
+
 export function getStoredAuth(): AuthResponse | null {
   const raw = localStorage.getItem("edukos_auth");
+
   if (!raw) return null;
 
   try {
@@ -123,25 +173,31 @@ export function getStoredAuth(): AuthResponse | null {
 export function storeAuth(auth: AuthResponse) {
   localStorage.setItem("edukos_auth", JSON.stringify(auth));
   localStorage.setItem("token", auth.accessToken);
+
   window.dispatchEvent(new Event("edukos-auth-change"));
 }
 
 export function clearAuth() {
   localStorage.removeItem("edukos_auth");
   localStorage.removeItem("token");
+
   window.dispatchEvent(new Event("edukos-auth-change"));
 }
 
 export function isAccessTokenExpired(auth: AuthResponse): boolean {
   const expiresAt = new Date(auth.accessTokenExpiresAt).getTime();
+
   return Number.isNaN(expiresAt) || Date.now() >= expiresAt - 60_000;
 }
 
 export async function restoreSession(): Promise<AuthResponse | null> {
   const auth = getStoredAuth();
+
   if (!auth) return null;
 
-  if (!isAccessTokenExpired(auth)) return auth;
+  if (!isAccessTokenExpired(auth)) {
+    return auth;
+  }
 
   if (!auth.refreshToken) {
     clearAuth();
@@ -150,7 +206,9 @@ export async function restoreSession(): Promise<AuthResponse | null> {
 
   try {
     const refreshed = await refreshToken(auth.refreshToken);
+
     storeAuth(refreshed);
+
     return refreshed;
   } catch {
     clearAuth();
@@ -172,23 +230,15 @@ export type RegisterPayload = {
   website?: string;
 };
 
-export type InstitutionProgramDto = {
-  programId: number;
-  institutionId: number;
-  name: string;
-  level?: string;
-  description?: string;
-  duration?: string;
-};
-
-export type InstitutionFullDetailsDto = {
-  institution: InstitutionDto;
-  programs: InstitutionProgramDto[];
-};
-
-async function request<T>(path: string, options: RequestInit = {}, retry = true): Promise<T> {
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  retry = true,
+): Promise<T> {
   const auth = getStoredAuth();
+
   const headers = new Headers(options.headers);
+
   headers.set("Content-Type", "application/json");
 
   if (auth?.accessToken) {
@@ -203,17 +253,22 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
       headers,
     });
   } catch {
-    throw new Error("Could not reach the API. Start the backend server and try again.");
+    throw new Error(
+      "Could not reach the API. Start the backend server and try again.",
+    );
   }
 
   if (response.status === 401 && retry && auth?.refreshToken) {
     const refreshed = await refreshToken(auth.refreshToken);
+
     storeAuth(refreshed);
+
     return request<T>(path, options, false);
   }
 
   if (!response.ok) {
     let message = "Request failed";
+
     try {
       const body = await response.json();
       message = body.message ?? message;
@@ -232,44 +287,65 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
 }
 
 export async function register(payload: RegisterPayload) {
-  const response = await request<AuthResponse>("/auth/register", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  }, false);
+  const response = await request<AuthResponse>(
+    "/auth/register",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    false,
+  );
 
   storeAuth(response);
+
   return response;
 }
 
 export async function login(email: string, password: string) {
-  const response = await request<AuthResponse>("/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  }, false);
+  const response = await request<AuthResponse>(
+    "/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    },
+    false,
+  );
 
   storeAuth(response);
+
   return response;
 }
 
 export async function refreshToken(refreshTokenValue: string) {
-  return request<AuthResponse>("/auth/refresh", {
-    method: "POST",
-    body: JSON.stringify({ refreshToken: refreshTokenValue }),
-  }, false);
+  return request<AuthResponse>(
+    "/auth/refresh",
+    {
+      method: "POST",
+      body: JSON.stringify({ refreshToken: refreshTokenValue }),
+    },
+    false,
+  );
 }
 
 export async function logout() {
   const auth = getStoredAuth();
+
   if (!auth?.refreshToken) {
     clearAuth();
     return;
   }
 
   try {
-    await request("/auth/logout", {
-      method: "POST",
-      body: JSON.stringify({ refreshToken: auth.refreshToken }),
-    }, false);
+    await request(
+      "/auth/logout",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          refreshToken: auth.refreshToken,
+        }),
+      },
+      false,
+    );
   } finally {
     clearAuth();
   }
@@ -279,7 +355,9 @@ export async function getCurrentUser() {
   return request<UserDto>("/auth/me");
 }
 
-export async function updateCurrentUser(data: Pick<UserDto, "firstName" | "lastName" | "phoneNumber">) {
+export async function updateCurrentUser(
+  data: Pick<UserDto, "firstName" | "lastName" | "phoneNumber">,
+) {
   return request<UserDto>("/auth/me", {
     method: "PUT",
     body: JSON.stringify(data),
@@ -287,23 +365,29 @@ export async function updateCurrentUser(data: Pick<UserDto, "firstName" | "lastN
 }
 
 export async function getMySavedInstitutions() {
-  return request<InstitutionDto[]>("/savedinstitutions/mine/institutions");
-}
-
-export async function saveInstitution(institutionId: number) {
-  return request<{ savedInstitutionId: number; userId: number; institutionId: number }>(
-    "/savedinstitutions/save",
-    {
-      method: "POST",
-      body: JSON.stringify({ institutionId }),
-    },
+  return request<InstitutionDto[]>(
+    "/savedinstitutions/mine/institutions",
   );
 }
 
-export async function unsaveInstitution(institutionId: number) {
-  return request<void>(`/savedinstitutions/unsave/${institutionId}`, {
-    method: "DELETE",
+export async function saveInstitution(institutionId: number) {
+  return request<{
+    savedInstitutionId: number;
+    userId: number;
+    institutionId: number;
+  }>("/savedinstitutions/save", {
+    method: "POST",
+    body: JSON.stringify({ institutionId }),
   });
+}
+
+export async function unsaveInstitution(institutionId: number) {
+  return request<void>(
+    `/savedinstitutions/unsave/${institutionId}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 export async function getMyApplications() {
@@ -311,42 +395,44 @@ export async function getMyApplications() {
 }
 
 export async function getAllApplications(institutionId?: number) {
-  const query = institutionId ? `?institutionId=${institutionId}` : "";
+  const query = institutionId
+    ? `?institutionId=${institutionId}`
+    : "";
+
   return request<ApplicationDto[]>(`/applications${query}`);
 }
 
-export async function getAllUsers() {
-  return request<UserDto[]>("/users");
-}
-
-export async function getMyNotifications() {
-  return request<NotificationDto[]>("/notifications/mine");
-}
-
-export async function getRecommendations() {
-  return request<InstitutionDto[]>("/institutions/search?isApproved=true");
-}
-
-export async function getInstitutions() {
-  return request<InstitutionDto[]>("/institutions");
-}
-export async function getInstitutionTypes() {
-  return request<InstitutionTypeDto[]>("/InstitutionTypes");
-}
-
-export async function getInstitutionsByType(institutionTypeId: number) {
-  return request<InstitutionDto[]>(`/institutions/by-type/${institutionTypeId}`);
-}
-
-export async function getInstitutionFullDetails(institutionId: number) {
-  return request<InstitutionFullDetailsDto>(`/institutions/${institutionId}/full-details`);
-}
-
-export async function submitApplication(data: Omit<ApplicationDto, "applicationId" | "createdAt" | "status" | "institutionName" | "userId">) {
+export async function submitApplication(
+  data: Omit<
+    ApplicationDto,
+    | "applicationId"
+    | "createdAt"
+    | "status"
+    | "institutionName"
+    | "userId"
+  >,
+) {
   return request<ApplicationDto>("/applications", {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+export async function updateApplicationStatus(
+  id: number,
+  status: string,
+) {
+  return request<ApplicationDto>(
+    `/applications/${id}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+  );
+}
+
+export async function getAllUsers() {
+  return request<UserDto[]>("/users");
 }
 
 export async function createUser(data: UserCreatePayload) {
@@ -356,7 +442,10 @@ export async function createUser(data: UserCreatePayload) {
   });
 }
 
-export async function updateUser(id: number, data: Partial<UserDto>) {
+export async function updateUser(
+  id: number,
+  data: Partial<UserDto>,
+) {
   return request<void>(`/users/${id}`, {
     method: "PUT",
     body: JSON.stringify({
@@ -373,11 +462,50 @@ export async function updateUser(id: number, data: Partial<UserDto>) {
 }
 
 export async function deleteUser(id: number) {
-  return request<void>(`/users/${id}`, { method: "DELETE" });
+  return request<void>(`/users/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getMyNotifications() {
+  return request<NotificationDto[]>("/notifications/mine");
+}
+
+export async function getRecommendations() {
+  return request<InstitutionDto[]>(
+    "/institutions/search?isApproved=true",
+  );
+}
+
+export async function getInstitutions() {
+  return request<InstitutionDto[]>("/institutions");
+}
+
+export async function getInstitutionTypes() {
+  return request<InstitutionTypeDto[]>("/InstitutionTypes");
+}
+
+export async function getInstitutionsByType(
+  institutionTypeId: number,
+) {
+  return request<InstitutionDto[]>(
+    `/institutions/by-type/${institutionTypeId}`,
+  );
+}
+
+export async function getInstitutionFullDetails(
+  institutionId: number,
+) {
+  return request<InstitutionFullDetailsDto>(
+    `/institutions/${institutionId}/full-details`,
+  );
 }
 
 export async function createInstitution(
-  data: Omit<InstitutionDto, "institutionId" | "createdAt" | "institutionTypeName">,
+  data: Omit<
+    InstitutionDto,
+    "institutionId" | "createdAt" | "institutionTypeName"
+  >,
 ) {
   return request<InstitutionDto>("/institutions", {
     method: "POST",
@@ -385,15 +513,23 @@ export async function createInstitution(
   });
 }
 
-export async function updateInstitution(id: number, data: InstitutionDto) {
+export async function updateInstitution(
+  id: number,
+  data: InstitutionDto,
+) {
   return request<void>(`/institutions/${id}`, {
     method: "PUT",
-    body: JSON.stringify({ ...data, institutionId: id }),
+    body: JSON.stringify({
+      ...data,
+      institutionId: id,
+    }),
   });
 }
 
 export async function deleteInstitution(id: number) {
-  return request<void>(`/institutions/${id}`, { method: "DELETE" });
+  return request<void>(`/institutions/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export async function createInstitutionType(name: string) {
@@ -403,15 +539,23 @@ export async function createInstitutionType(name: string) {
   });
 }
 
-export async function updateInstitutionType(id: number, data: InstitutionTypeDto) {
+export async function updateInstitutionType(
+  id: number,
+  data: InstitutionTypeDto,
+) {
   return request<void>(`/InstitutionTypes/${id}`, {
     method: "PUT",
-    body: JSON.stringify({ ...data, institutionTypeId: id }),
+    body: JSON.stringify({
+      ...data,
+      institutionTypeId: id,
+    }),
   });
 }
 
 export async function deleteInstitutionType(id: number) {
-  return request<void>(`/InstitutionTypes/${id}`, { method: "DELETE" });
+  return request<void>(`/InstitutionTypes/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export async function getReviews() {
@@ -419,27 +563,20 @@ export async function getReviews() {
 }
 
 export async function deleteReview(id: number) {
-  return request<void>(`/reviews/${id}`, { method: "DELETE" });
-}
-
-export async function updateApplicationStatus(id: number, status: string) {
-  return request<ApplicationDto>(`/applications/${id}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
+  return request<void>(`/reviews/${id}`, {
+    method: "DELETE",
   });
 }
 
-export type AdminDashboardData = {
-  user: UserDto;
-  users: UserDto[];
-  institutions: InstitutionDto[];
-  institutionTypes: InstitutionTypeDto[];
-  reviews: ReviewDto[];
-  applications: ApplicationDto[];
-};
-
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
-  const [user, users, institutions, institutionTypes, reviews, applications] = await Promise.all([
+  const [
+    user,
+    users,
+    institutions,
+    institutionTypes,
+    reviews,
+    applications,
+  ] = await Promise.all([
     getCurrentUser(),
     getAllUsers(),
     getInstitutions(),
@@ -448,11 +585,24 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     getAllApplications(),
   ]);
 
-  return { user, users, institutions, institutionTypes, reviews, applications };
+  return {
+    user,
+    users,
+    institutions,
+    institutionTypes,
+    reviews,
+    applications,
+  };
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const [user, savedInstitutions, applications, notifications, recommendations] = await Promise.all([
+  const [
+    user,
+    savedInstitutions,
+    applications,
+    notifications,
+    recommendations,
+  ] = await Promise.all([
     getCurrentUser(),
     getMySavedInstitutions(),
     getMyApplications(),
@@ -467,4 +617,133 @@ export async function getDashboardData(): Promise<DashboardData> {
     notifications,
     recommendations: recommendations.slice(0, 4),
   };
+}
+
+export async function getMyInstitutionProfile(): Promise<InstitutionDto> {
+  return request<InstitutionDto>("/institution/my-profile");
+}
+
+export async function updateMyInstitutionProfile(
+  data: Partial<InstitutionDto>
+): Promise<void> {
+  return request<void>("/institution/my-profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getMyPrograms(): Promise<InstitutionProgramDto[]> {
+  return request<InstitutionProgramDto[]>("/institution-programs/my");
+}
+
+export async function createProgram(
+  data: Omit<InstitutionProgramDto, "programId" | "institutionId">
+): Promise<InstitutionProgramDto> {
+  return request<InstitutionProgramDto>("/institution-programs", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateProgram(
+  id: number,
+  data: Partial<InstitutionProgramDto>
+): Promise<void> {
+  return request<void>(`/institution-programs/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteProgram(id: number): Promise<void> {
+  return request<void>(`/institution-programs/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getMyStaff(): Promise<InstitutionStaffDto[]> {
+  return request<InstitutionStaffDto[]>("/institution-staff/my");
+}
+
+export async function createStaff(
+  data: Omit<InstitutionStaffDto, "staffId" | "institutionId">
+): Promise<InstitutionStaffDto> {
+  return request<InstitutionStaffDto>("/institution-staff", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateStaff(
+  id: number,
+  data: Partial<InstitutionStaffDto>
+): Promise<void> {
+  return request<void>(`/institution-staff/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteStaff(id: number): Promise<void> {
+  return request<void>(`/institution-staff/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getMyFacilities(): Promise<InstitutionFacilityDto[]> {
+  return request<InstitutionFacilityDto[]>("/institution-facilities/my");
+}
+
+export async function createFacility(
+  data: Omit<InstitutionFacilityDto, "facilityId" | "institutionId">
+): Promise<InstitutionFacilityDto> {
+  return request<InstitutionFacilityDto>("/institution-facilities", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateFacility(
+  id: number,
+  data: Partial<InstitutionFacilityDto>
+): Promise<void> {
+  return request<void>(`/institution-facilities/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteFacility(id: number): Promise<void> {
+  return request<void>(`/institution-facilities/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getMyAnnouncements(): Promise<InstitutionAnnouncementDto[]> {
+  return request<InstitutionAnnouncementDto[]>("/institution-announcements/my");
+}
+
+export async function createAnnouncement(
+  data: Omit<InstitutionAnnouncementDto, "announcementId" | "institutionId" | "createdAt">
+): Promise<InstitutionAnnouncementDto> {
+  return request<InstitutionAnnouncementDto>("/institution-announcements", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateAnnouncement(
+  id: number,
+  data: Partial<InstitutionAnnouncementDto>
+): Promise<void> {
+  return request<void>(`/institution-announcements/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAnnouncement(id: number): Promise<void> {
+  return request<void>(`/institution-announcements/${id}`, {
+    method: "DELETE",
+  });
 }

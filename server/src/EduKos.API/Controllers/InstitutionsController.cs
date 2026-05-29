@@ -11,6 +11,7 @@ namespace EduKos.API.Controllers;
 [Route("api/[controller]")]
 public class InstitutionsController(AppDbContext context) : ControllerBase
 {
+
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<InstitutionDto>>> GetAll(CancellationToken cancellationToken)
@@ -23,7 +24,9 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<InstitutionDto>> GetById(int id, CancellationToken cancellationToken)
     {
-        var institution = await BaseQuery().FirstOrDefaultAsync(x => x.InstitutionId == id, cancellationToken);
+        var institution = await BaseQuery()
+            .FirstOrDefaultAsync(x => x.InstitutionId == id, cancellationToken);
+
         return institution == null ? NotFound() : Ok(ToDto(institution));
     }
 
@@ -34,6 +37,7 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
         var institutions = await BaseQuery()
             .Where(x => x.InstitutionTypeId == institutionTypeId)
             .ToListAsync(cancellationToken);
+
         return Ok(institutions.Select(ToDto));
     }
 
@@ -57,7 +61,7 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(request.Program))
             query = query.Where(x => x.Programs.Any(p => p.Name.Contains(request.Program) || (p.Level != null && p.Level.Contains(request.Program))));
-
+            
         if (request.IsApproved.HasValue)
             query = query.Where(x => x.IsApproved == request.IsApproved.Value);
 
@@ -95,14 +99,91 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
         });
     }
 
+    [HttpGet("my")]
+    [Authorize(Roles = "Shkolla")]
+    public async Task<ActionResult<InstitutionDto>> GetMyInstitution(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var institution = await BaseQuery()
+            .FirstOrDefaultAsync(x => x.OwnerUserId == userId, cancellationToken);
+
+        if (institution == null)
+            return NotFound();
+
+        return Ok(ToDto(institution));
+    }
+
+    [HttpGet("my/full")]
+    [Authorize(Roles = "Shkolla")]
+    public async Task<ActionResult<InstitutionFullDetailsDto>> GetMyFullInstitution(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var institution = await context.Institutions
+            .AsNoTracking()
+            .Include(x => x.InstitutionType)
+            .Include(x => x.Details)
+            .Include(x => x.Programs)
+            .Include(x => x.Staff)
+            .Include(x => x.Facilities)
+            .Include(x => x.Reviews)
+            .Include(x => x.Announcements)
+            .FirstOrDefaultAsync(x => x.OwnerUserId == userId, cancellationToken);
+
+        if (institution == null)
+            return NotFound();
+
+        return Ok(new InstitutionFullDetailsDto
+        {
+            Institution = ToDto(institution),
+            Details = institution.Details == null ? null : Map<InstitutionDetail, InstitutionDetailDto>(institution.Details),
+            Programs = institution.Programs.Select(Map<InstitutionProgram, InstitutionProgramDto>).ToList(),
+            Staff = institution.Staff.Select(Map<InstitutionStaff, InstitutionStaffDto>).ToList(),
+            Facilities = institution.Facilities.Select(Map<InstitutionFacility, InstitutionFacilityDto>).ToList(),
+            Reviews = institution.Reviews.Select(Map<Review, ReviewDto>).ToList(),
+            Announcements = institution.Announcements.Select(Map<InstitutionAnnouncement, InstitutionAnnouncementDto>).ToList()
+        });
+    }
+
+    [HttpPut("my")]
+    [Authorize(Roles = "Shkolla")]
+    public async Task<IActionResult> UpdateMyInstitution([FromBody] InstitutionDto dto, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var entity = await context.Institutions
+            .FirstOrDefaultAsync(x => x.OwnerUserId == userId, cancellationToken);
+
+        if (entity == null)
+            return NotFound();
+
+        CrudControllerBase<Institution, InstitutionDto>.Copy(dto, entity);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
     [HttpPost]
     [Authorize(Roles = "Admin,Shkolla")]
     public async Task<ActionResult<InstitutionDto>> Create([FromBody] InstitutionDto dto, CancellationToken cancellationToken)
     {
         var entity = Map<InstitutionDto, Institution>(dto);
         entity.InstitutionId = 0;
+
         await context.Institutions.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
         return CreatedAtAction(nameof(GetById), new { id = entity.InstitutionId }, ToDto(entity));
     }
 
@@ -111,11 +192,12 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
     public async Task<IActionResult> Update(int id, [FromBody] InstitutionDto dto, CancellationToken cancellationToken)
     {
         var entity = await context.Institutions.FindAsync([id], cancellationToken);
+
         if (entity == null)
             return NotFound();
 
         CrudControllerBase<Institution, InstitutionDto>.Copy(dto, entity);
-        entity.InstitutionId = id;
+
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
@@ -125,16 +207,21 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var entity = await context.Institutions.FindAsync([id], cancellationToken);
+
         if (entity == null)
             return NotFound();
 
         context.Institutions.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
+
         return NoContent();
     }
 
     private IQueryable<Institution> BaseQuery() =>
-        context.Institutions.AsNoTracking().Include(x => x.InstitutionType).Include(x => x.Programs);
+        context.Institutions
+            .AsNoTracking()
+            .Include(x => x.InstitutionType)
+            .Include(x => x.Programs);
 
     private static InstitutionDto ToDto(Institution institution)
     {

@@ -212,3 +212,93 @@ public class UserProfileUpdateDto
     [MaxLength(100)] public string? LastName { get; set; }
     [MaxLength(50)] public string? PhoneNumber { get; set; }
 }
+
+public class CreateProgramRequestDto
+{
+    [Required, MaxLength(255)]
+    public string Name { get; set; } = default!;
+
+    [MaxLength(100)]
+    public string? Level { get; set; }
+
+    public string? Description { get; set; }
+
+    [MaxLength(100)]
+    public string? Duration { get; set; }
+
+    public decimal? TuitionFee { get; set; }
+
+    public int? ECTS { get; set; }
+}
+
+public class UpdateProgramRequestDto
+{
+    [MaxLength(255)]
+    public string? Name { get; set; }
+
+    [MaxLength(100)]
+    public string? Level { get; set; }
+
+    public string? Description { get; set; }
+
+    [MaxLength(100)]
+    public string? Duration { get; set; }
+
+    public decimal? TuitionFee { get; set; }
+
+    public int? ECTS { get; set; }
+}
+
+public class CreateStaffRequestDto
+{
+    [Required, MaxLength(150)]
+    public string FullName { get; set; } = default!;
+
+    [MaxLength(150)]
+    public string? Position { get; set; }
+
+    public int? PhotoFileId { get; set; }
+}
+
+public class UpdateStaffRequestDto
+{
+    [MaxLength(150)]
+    public string? FullName { get; set; }
+
+    [MaxLength(150)]
+    public string? Position { get; set; }
+
+    public int? PhotoFileId { get; set; }
+}
+
+public class CreateFacilityRequestDto
+{
+    [Required, MaxLength(150)]
+    public string Name { get; set; } = default!;
+
+    public string? Description { get; set; }
+}
+
+public class UpdateFacilityRequestDto
+{
+    [MaxLength(150)]
+    public string? Name { get; set; }
+
+    public string? Description { get; set; }
+}
+
+public class CreateAnnouncementRequestDto
+{
+    [Required, MaxLength(255)]
+    public string Title { get; set; } = default!;
+
+    public string? Content { get; set; }
+}
+
+public class UpdateAnnouncementRequestDto
+{
+    [MaxLength(255)]
+    public string? Title { get; set; }
+
+    public string? Content { get; set; }
+}
