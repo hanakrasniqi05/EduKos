@@ -154,7 +154,12 @@ export type InstitutionAnnouncementDto = {
 export type InstitutionFullDetailsDto = {
   institution: InstitutionDto;
   programs: InstitutionProgramDto[];
+  staff: InstitutionStaffDto[];
+  facilities: InstitutionFacilityDto[];
+  reviews: ReviewDto[];
+  announcements: InstitutionAnnouncementDto[];
 };
+
 
 export type AdminDashboardData = {
   user: UserDto;

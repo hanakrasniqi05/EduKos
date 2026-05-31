@@ -7,6 +7,7 @@ import {
   type InstitutionTypeDto,
   type ReviewDto,
   type UserDto,
+  type InstitutionFullDetailsDto,
   createInstitution,
   createInstitutionType,
   createUser,
@@ -15,10 +16,10 @@ import {
   deleteReview,
   deleteUser,
   getAdminDashboardData,
-  updateApplicationStatus,
   updateInstitution,
   updateInstitutionType,
   updateUser,
+  getInstitutionFullDetails,
 } from "../lib/api";
 
 type Section =
@@ -73,12 +74,24 @@ const btnDanger =
 const btnSecondary =
   "rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-50";
 
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "—";
+  try {
+    return new Date(dateString).toLocaleDateString();
+  } catch {
+    return dateString;
+  }
+};
+
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [selectedInstitution, setSelectedInstitution] = useState<InstitutionDto | null>(null);
+  const [fullDetails, setFullDetails] = useState<InstitutionFullDetailsDto | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   async function reload() {
     const dashboard = await getAdminDashboardData();
@@ -153,8 +166,9 @@ export default function AdminDashboard() {
     );
   }
 
+  const currentAdmin = data.users.find(u => u.roles?.includes("Admin")) || data.users[0] || { firstName: "Admin", lastName: "", email: "admin@edukos.com" };
   const fullName =
-    `${data.user.firstName ?? ""} ${data.user.lastName ?? ""}`.trim() || data.user.email;
+  `${currentAdmin.firstName ?? ""} ${currentAdmin.lastName ?? ""}`.trim() || currentAdmin.email;
 
   return (
     <motion.main
@@ -173,7 +187,7 @@ export default function AdminDashboard() {
               A
             </div>
             <h1 className="mt-3 font-semibold">{fullName}</h1>
-            <p className="text-sm text-gray-500">{data.user.email}</p>
+            <p className="text-sm text-gray-500">{currentAdmin.email}</p>
             <span className="mt-2 inline-flex rounded-full border border-emerald/30 bg-emerald/10 px-3 py-1 text-xs font-semibold text-yale-blue">
               Admin
             </span>
@@ -220,12 +234,7 @@ export default function AdminDashboard() {
                   ))}
                 </div>
                 <Panel title="Aplikimet e fundit">
-                  <ApplicationsTable
-                    applications={data.applications.slice(0, 5)}
-                    onStatusChange={(id, status) => runAction(async () => {
-                      await updateApplicationStatus(id, status);
-                    })}
-                  />
+                  <ApplicationsTable applications={data.applications.slice(0, 5)} />
                 </Panel>
               </motion.div>
             )}
@@ -249,6 +258,12 @@ export default function AdminDashboard() {
                   onCreate={(payload) => runAction(async () => { await createInstitution(payload); })}
                   onUpdate={(id, payload) => runAction(async () => { await updateInstitution(id, payload); })}
                   onDelete={(id) => runAction(async () => { await deleteInstitution(id); })}
+                  selectedInstitution={selectedInstitution}
+                  setSelectedInstitution={setSelectedInstitution}
+                  fullDetails={fullDetails}
+                  setFullDetails={setFullDetails}
+                  loadingDetails={loadingDetails}
+                  setLoadingDetails={setLoadingDetails}
                 />
               </motion.div>
             )}
@@ -279,12 +294,7 @@ export default function AdminDashboard() {
             {activeSection === "applications" && (
               <motion.div key="applications" variants={riseVariants} initial="hidden" animate="visible" exit="exit">
                 <Panel title="Te gjitha aplikimet">
-                  <ApplicationsTable
-                    applications={data.applications}
-                    onStatusChange={(id, status) => runAction(async () => {
-                      await updateApplicationStatus(id, status);
-                    })}
-                  />
+                  <ApplicationsTable applications={data.applications} />
                 </Panel>
               </motion.div>
             )}
@@ -371,7 +381,7 @@ function UsersSection({
                     <td className="py-2 pr-4">
                       <input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className={inputClass} />
                     </td>
-                    <td className="py-2 pr-4 text-gray-500">{user.roles.join(", ")}</td>
+                    <td className="py-2 pr-4 text-gray-500">{user.roles?.join(", ") || "—"}</td>
                     <td className="py-2 pr-4">
                       <label className="flex items-center gap-2">
                         <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} />
@@ -389,7 +399,7 @@ function UsersSection({
                   <>
                     <td className="py-2 pr-4">{user.firstName} {user.lastName}</td>
                     <td className="py-2 pr-4">{user.email}</td>
-                    <td className="py-2 pr-4 text-gray-500">{user.roles.join(", ") || "—"}</td>
+                    <td className="py-2 pr-4 text-gray-500">{user.roles?.join(", ") || "—"}</td>
                     <td className="py-2 pr-4">
                       <span className={user.isActive ? "text-emerald-700" : "text-red-600"}>
                         {user.isActive ? "Aktiv" : "Jo aktiv"}
@@ -432,14 +442,27 @@ function InstitutionsSection({
   onCreate,
   onUpdate,
   onDelete,
+  selectedInstitution,
+  setSelectedInstitution,
+  fullDetails,
+  setFullDetails,
+  loadingDetails,
+  setLoadingDetails,
 }: {
   institutions: InstitutionDto[];
   institutionTypes: InstitutionTypeDto[];
-  onCreate: (data: Omit<InstitutionDto, "institutionId" | "createdAt" | "institutionTypeName">) => Promise<void>;
-  onUpdate: (id: number, data: InstitutionDto) => Promise<void>;
+  onCreate: (data: any) => Promise<void>;
+  onUpdate: (id: number, data: any) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  selectedInstitution: InstitutionDto | null;
+  setSelectedInstitution: React.Dispatch<React.SetStateAction<InstitutionDto | null>>;
+  fullDetails: InstitutionFullDetailsDto | null;
+  setFullDetails: React.Dispatch<React.SetStateAction<InstitutionFullDetailsDto | null>>;
+  loadingDetails: boolean;
+  setLoadingDetails: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [showForm, setShowForm] = useState(false);
+
   const emptyInstitution = {
     institutionTypeId: institutionTypes[0]?.institutionTypeId ?? 1,
     name: "",
@@ -447,12 +470,17 @@ function InstitutionsSection({
     description: "",
     isApproved: false,
   };
+
   const [form, setForm] = useState(emptyInstitution);
 
   return (
     <Panel title="Institucionet">
       <div className="mb-4 flex justify-end">
-        <button type="button" className={btnPrimary} onClick={() => setShowForm((v) => !v)}>
+        <button
+          type="button"
+          className={btnPrimary}
+          onClick={() => setShowForm((v) => !v)}
+        >
           {showForm ? "Anulo" : "+ Institucion i ri"}
         </button>
       </div>
@@ -468,24 +496,60 @@ function InstitutionsSection({
             });
           }}
         >
-          <input required placeholder="Emri" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} />
-          <input placeholder="Qyteti" value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputClass} />
+          <input
+            required
+            placeholder="Emri"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className={inputClass}
+          />
+
+          <input
+            placeholder="Qyteti"
+            value={form.city ?? ""}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            className={inputClass}
+          />
+
           <select
             value={form.institutionTypeId}
-            onChange={(e) => setForm({ ...form, institutionTypeId: Number(e.target.value) })}
+            onChange={(e) =>
+              setForm({ ...form, institutionTypeId: Number(e.target.value) })
+            }
             className={inputClass}
           >
             {institutionTypes.map((t) => (
-              <option key={t.institutionTypeId} value={t.institutionTypeId}>{t.name}</option>
+              <option key={t.institutionTypeId} value={t.institutionTypeId}>
+                {t.name}
+              </option>
             ))}
           </select>
+
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.isApproved} onChange={(e) => setForm({ ...form, isApproved: e.target.checked })} />
+            <input
+              type="checkbox"
+              checked={form.isApproved}
+              onChange={(e) =>
+                setForm({ ...form, isApproved: e.target.checked })
+              }
+            />
             Aprovuar
           </label>
-          <textarea placeholder="Pershkrimi" value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} className={`${inputClass} md:col-span-2`} rows={2} />
+
+          <textarea
+            placeholder="Pershkrimi"
+            value={form.description ?? ""}
+            onChange={(e) =>
+              setForm({ ...form, description: e.target.value })
+            }
+            className={`${inputClass} md:col-span-2`}
+            rows={2}
+          />
+
           <div className="md:col-span-2">
-            <button type="submit" className={btnPrimary}>Krijo</button>
+            <button type="submit" className={btnPrimary}>
+              Krijo
+            </button>
           </div>
         </form>
       )}
@@ -501,39 +565,117 @@ function InstitutionsSection({
               <th className="py-2">Veprime</th>
             </tr>
           </thead>
+
           <tbody>
             {institutions.map((inst) => (
               <tr key={inst.institutionId} className="border-b border-gray-50">
                 <td className="py-2 pr-4 font-medium">{inst.name}</td>
-                <td className="py-2 pr-4 text-gray-500">{inst.institutionTypeName ?? inst.institutionTypeId}</td>
+                <td className="py-2 pr-4 text-gray-500">
+                  {inst.institutionTypeName ?? inst.institutionTypeId}
+                </td>
                 <td className="py-2 pr-4">{inst.city || "—"}</td>
                 <td className="py-2 pr-4">
                   <select
                     value={inst.isApproved ? "approved" : "pending"}
                     onChange={(e) =>
                       onUpdate(inst.institutionId, {
-                        ...inst,
+                        name: inst.name,
+                        city: inst.city,
+                        description: inst.description,
+                        institutionTypeId: inst.institutionTypeId,
                         isApproved: e.target.value === "approved",
                       })
                     }
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold outline-none ${
-                      inst.isApproved
-                        ? "border-emerald-200 bg-emerald-100 text-emerald-700"
-                        : "border-amber-200 bg-amber-100 text-amber-700"
-                    }`}
+                    className="rounded-full border px-3 py-1 text-xs font-semibold"
                   >
                     <option value="pending">Ne pritje</option>
                     <option value="approved">Aprovuar</option>
                   </select>
                 </td>
+
                 <td className="py-2">
-                  <button type="button" className={btnDanger} onClick={() => { if (confirm("Fshi institucionin?")) onDelete(inst.institutionId); }}>Fshi</button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className={btnDanger}
+                      onClick={() => {
+                        if (confirm("Fshi institucionin?"))
+                          onDelete(inst.institutionId);
+                      }}
+                    >
+                      Fshi
+                    </button>
+
+                    <button
+                      type="button"
+                      className={btnSecondary}
+                      onClick={async () => {
+                        setSelectedInstitution(inst);
+                        setLoadingDetails(true);
+                        try {
+                          const details = await getInstitutionFullDetails(inst.institutionId);
+                          console.log("FULL DETAILS RESPONSE:", details);
+                          setFullDetails(details);
+                        } catch(err) {
+                          setFullDetails(null);
+                        } finally {
+                          setLoadingDetails(false);
+                        }
+                      }}
+                    >
+                      View more
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {selectedInstitution && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg">
+            <div className="mb-4 flex justify-between">
+              <h2 className="text-xl font-bold">{selectedInstitution.name}</h2>
+              <button
+                className={btnSecondary}
+                onClick={() => {
+                  setSelectedInstitution(null);
+                  setFullDetails(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <p><b>City:</b> {selectedInstitution.city || "—"}</p>
+              <p><b>Address:</b> {(selectedInstitution as any).address || "—"}</p>
+              <p><b>Email:</b> {(selectedInstitution as any).email || "—"}</p>
+              <p><b>Phone:</b> {(selectedInstitution as any).phone || "—"}</p>
+              <p><b>Description:</b> {selectedInstitution.description || "—"}</p>
+            </div>
+
+            <div className="mt-6 border-t pt-4">
+              <h3 className="font-semibold">Details</h3>
+              
+              {loadingDetails ? (
+                <p className="text-gray-500">Loading...</p>
+              ) : fullDetails ? (
+                <div className="text-sm space-y-1 mt-2">
+                  <p>Programs: {fullDetails.programs?.length ?? 0}</p>
+                  <p>Staff: {fullDetails.staff?.length ?? 0}</p>
+                  <p>Facilities: {fullDetails.facilities?.length ?? 0}</p>
+                  <p>Reviews: {fullDetails.reviews?.length ?? 0}</p>
+                </div>
+              ) : (
+                <p className="text-gray-500 mt-1">No details found</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </Panel>
   );
 }
@@ -642,10 +784,8 @@ function ReviewsTable({
 
 function ApplicationsTable({
   applications,
-  onStatusChange,
 }: {
   applications: ApplicationDto[];
-  onStatusChange: (id: number, status: string) => Promise<void>;
 }) {
   if (!applications.length) {
     return <p className="text-gray-500">Nuk ka aplikime.</p>;
@@ -660,8 +800,7 @@ function ApplicationsTable({
             <th className="py-2 pr-4">Institucioni</th>
             <th className="py-2 pr-4">Programi</th>
             <th className="py-2 pr-4">Data</th>
-            <th className="py-2 pr-4">Status</th>
-            <th className="py-2">Ndrysho</th>
+            <th className="py-2 pr-4">Statusi Aktual</th>
           </tr>
         </thead>
         <tbody>
@@ -675,20 +814,9 @@ function ApplicationsTable({
               <td className="py-2 pr-4">{app.selectedProgram || app.educationLevel}</td>
               <td className="py-2 pr-4 text-xs text-gray-400">{formatDate(app.createdAt)}</td>
               <td className="py-2 pr-4">
-                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusClass[app.status] ?? statusClass.pending}`}>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[app.status] ?? statusClass.pending}`}>
                   {statusLabel[app.status] ?? app.status}
                 </span>
-              </td>
-              <td className="py-2">
-                <select
-                  value={app.status}
-                  onChange={(e) => onStatusChange(app.applicationId, e.target.value)}
-                  className="rounded-lg border border-gray-200 px-2 py-1 text-xs"
-                >
-                  <option value="pending">Ne shqyrtim</option>
-                  <option value="approved">Aprovuar</option>
-                  <option value="rejected">Refuzuar</option>
-                </select>
               </td>
             </tr>
           ))}
@@ -696,12 +824,4 @@ function ApplicationsTable({
       </table>
     </div>
   );
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("sq-AL", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(value));
 }
