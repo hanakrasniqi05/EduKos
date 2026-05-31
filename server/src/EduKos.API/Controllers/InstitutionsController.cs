@@ -77,12 +77,6 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
                 ((r.TeachingQualityRating ?? 0) + (r.FacilitiesRating ?? 0) + (r.DifficultyRating ?? 0) + (r.StaffRating ?? 0)) / 4.0
             ) >= request.MinRating.Value);
         }
-        
-        if (!string.IsNullOrWhiteSpace(request.Language))
-            query = query.Where(x => x.Language != null && x.Language.Contains(request.Language));
-        
-        if (!string.IsNullOrWhiteSpace(request.InstitutionOwnership))
-            query = query.Where(x => x.InstitutionOwnership != null && x.InstitutionOwnership == request.InstitutionOwnership);
 
         var institutions = await query.ToListAsync(cancellationToken);
         return Ok(institutions.Select(ToDto));
@@ -247,8 +241,6 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
     {
         var dto = Map<Institution, InstitutionDto>(institution);
         dto.InstitutionTypeName = institution.InstitutionType?.Name;
-        dto.Language = institution.Language;
-        dto.InstitutionOwnership = institution.InstitutionOwnership;
         return dto;
     }
 

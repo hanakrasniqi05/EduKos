@@ -23,38 +23,6 @@ public class InstitutionDetailsController(AppDbContext context) : CrudController
 }
 
 [Route("api/[controller]")]
-public class InstitutionProgramsController(AppDbContext context) : CrudControllerBase<InstitutionProgram, InstitutionProgramDto>(context)
-{
-    protected override DbSet<InstitutionProgram> Set => Context.InstitutionPrograms;
-    protected override int GetId(InstitutionProgram entity) => entity.ProgramId;
-    protected override void SetId(InstitutionProgram entity, int id) => entity.ProgramId = id;
-}
-
-[Route("api/[controller]")]
-public class InstitutionStaffController(AppDbContext context) : CrudControllerBase<InstitutionStaff, InstitutionStaffDto>(context)
-{
-    protected override DbSet<InstitutionStaff> Set => Context.InstitutionStaff;
-    protected override int GetId(InstitutionStaff entity) => entity.StaffId;
-    protected override void SetId(InstitutionStaff entity, int id) => entity.StaffId = id;
-}
-
-[Route("api/[controller]")]
-public class InstitutionFacilitiesController(AppDbContext context) : CrudControllerBase<InstitutionFacility, InstitutionFacilityDto>(context)
-{
-    protected override DbSet<InstitutionFacility> Set => Context.InstitutionFacilities;
-    protected override int GetId(InstitutionFacility entity) => entity.FacilityId;
-    protected override void SetId(InstitutionFacility entity, int id) => entity.FacilityId = id;
-}
-
-[Route("api/[controller]")]
-public class InstitutionAnnouncementsController(AppDbContext context) : CrudControllerBase<InstitutionAnnouncement, InstitutionAnnouncementDto>(context)
-{
-    protected override DbSet<InstitutionAnnouncement> Set => Context.InstitutionAnnouncements;
-    protected override int GetId(InstitutionAnnouncement entity) => entity.AnnouncementId;
-    protected override void SetId(InstitutionAnnouncement entity, int id) => entity.AnnouncementId = id;
-}
-
-[Route("api/[controller]")]
 public class RecommendationsController(AppDbContext context) : CrudControllerBase<Recommendation, RecommendationDto>(context)
 {
     protected override DbSet<Recommendation> Set => Context.Recommendations;

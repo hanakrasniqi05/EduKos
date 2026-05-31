@@ -31,12 +31,12 @@ public class InstitutionProgramsController(AppDbContext context)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        var institution = await Context.Institutions
+        var institution = await context.Institutions
             .FirstOrDefaultAsync(x => x.OwnerUserId == userId);
 
         if (institution == null) return NotFound();
 
-        var programs = await Context.InstitutionPrograms
+        var programs = await context.InstitutionPrograms
             .Where(x => x.InstitutionId == institution.InstitutionId)
             .ToListAsync();
 
