@@ -1,5 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
+import React, { useEffect, useState } from "react";
+import { getHomeStats } from "../lib/api";
 
 interface StatCardProps {
   number: string;
@@ -29,11 +30,43 @@ const StatCard: React.FC<StatCardProps> = ({ number, label, delay }) => {
 };
 
 const HomeStats: React.FC = () => {
-  const stats = [
-    { number: "42", label: "Shkolla të regjistruara", delay: 0.1 },
-    { number: "150+", label: "Programe studimore", delay: 0.2 },
-    { number: "10k+", label: "Përdorues aktivë", delay: 0.3 },
-  ];
+ const [stats, setStats] = useState([
+  { number: "0", label: "Shkolla të regjistruara", delay: 0.1 },
+  { number: "0", label: "Programe studimore", delay: 0.2 },
+  { number: "0", label: "Përdorues aktivë", delay: 0.3 },
+]);
+
+useEffect(() => {
+
+  async function loadStats() {
+    try {
+      const data = await getHomeStats();
+      console.log("HOME STATS", data);
+      setStats([
+        {
+          number: data.institutions.toString(),
+          label: "Shkolla të regjistruara",
+          delay: 0.1,
+        },
+        {
+          number: data.programs.toString(),
+          label: "Programe studimore",
+          delay: 0.2,
+        },
+        {
+          number: data.users.toString(),
+          label: "Përdorues aktivë",
+          delay: 0.3,
+        },
+      ]);
+    } catch (error) {
+      console.error("Failed to load stats", error);
+    }
+    
+  }
+
+  loadStats();
+}, []);
 
   return (
     <section className="py-20 px-6 bg-gray-50/50">

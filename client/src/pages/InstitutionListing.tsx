@@ -128,8 +128,9 @@ const InstitutionListing: React.FC<Props> = ({
   }, [institutions]);
 
   return (
-    <main className="min-h-screen bg-[#f7fbf3] px-5 md:px-10 py-10">
-      <section className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#f7fbf3]  flex flex-col">
+      <section className="flex-1 px-5 md:px-10 py-10">
+      <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">
@@ -173,6 +174,7 @@ const InstitutionListing: React.FC<Props> = ({
           loading={loading}
           error={error}
         />
+      </div>
       </section>
       <Footer />
     </main>

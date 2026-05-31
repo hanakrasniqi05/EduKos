@@ -70,6 +70,12 @@ export type ReviewDto = {
   createdAt: string;
 };
 
+export interface HomeStatsDto {
+  institutions: number;
+  programs: number;
+  users: number;
+}
+
 export type UserCreatePayload = {
   email: string;
   password: string;
@@ -777,4 +783,8 @@ export async function searchInstitutions(params: SearchInstitutionsParams): Prom
   const url = `/institutions/search${queryString ? `?${queryString}` : ""}`;
   
   return request<InstitutionDto[]>(url);
+}
+
+export async function getHomeStats(): Promise<HomeStatsDto> {
+  return request<HomeStatsDto>("/home/stats");
 }
