@@ -9,7 +9,7 @@ export default function InstitutionsPanel({
 }: Props) {
   return (
     <section className="rounded-xl border border-emerald/20 bg-white p-5 shadow-sm">
-      <h2 className="mb-4 text-lg font-bold text-yale-blue">
+      <h2 className="mb-4 text-lg font-bold text-yale-green">
         Institucionet e mia
       </h2>
 

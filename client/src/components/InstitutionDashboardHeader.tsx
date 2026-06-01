@@ -85,7 +85,7 @@ export default function InstitutionDashboardHeader({
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
               activeTab === tab.key
-                ? "bg-blue-600 text-white"
+                ? "bg-green-600 text-white"
                 : "bg-gray-100 hover:bg-gray-200"
             }`}
           >

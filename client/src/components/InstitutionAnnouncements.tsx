@@ -94,7 +94,7 @@ export default function AnnouncementsTab() {
             resetForm();
             setShowForm(!showForm);
           }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+          className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
         >
           {showForm ? "Cancel" : "+ Post Announcement"}
         </button>
@@ -156,7 +156,7 @@ export default function AnnouncementsTab() {
                   <div className="flex gap-2 ml-4">
                     <button
                       onClick={() => handleEdit(ann)}
-                      className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                      className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
                     >
                       Edit
                     </button>

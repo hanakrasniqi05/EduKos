@@ -24,28 +24,29 @@ export default function InstitutionOverview() {
     loadAll();
   }, []);
 
-  async function loadAll() {
-    try {
-      const [profileData, programsData, staffData, facilitiesData, announcementsData] =
-        await Promise.all([
-          getMyInstitutionProfile(),
-          getMyPrograms(),
-          getMyStaff(),
-          getMyFacilities(),
-          getMyAnnouncements(),
-        ]);
+async function loadAll() {
+  try {
+    const profileData = await getMyInstitutionProfile();
+    setInstitution(profileData);
 
-      setInstitution(profileData);
-      setPrograms(programsData);
-      setStaff(staffData);
-      setFacilities(facilitiesData);
-      setAnnouncements(announcementsData);
-    } catch (err) {
-      console.error("Failed to load overview data", err);
-    } finally {
-      setLoading(false);
-    }
+    const programsData = await getMyPrograms();
+    setPrograms(programsData);
+
+    const staffData = await getMyStaff();
+    setStaff(staffData);
+
+    const facilitiesData = await getMyFacilities();
+    setFacilities(facilitiesData);
+
+    const announcementsData = await getMyAnnouncements();
+    setAnnouncements(announcementsData);
+
+  } catch (err) {
+    console.error("FAILED OVERVIEW LOAD:", err);
+  } finally {
+    setLoading(false);
   }
+}
 
   function formatDate(dateStr?: string): string {
     if (!dateStr) return "";
@@ -73,10 +74,10 @@ export default function InstitutionOverview() {
   }
 
   const stats = [
-    { label: "Programs", value: programs.length, color: "bg-blue-500" },
-    { label: "Staff Members", value: staff.length, color: "bg-green-500" },
-    { label: "Facilities", value: facilities.length, color: "bg-purple-500" },
-    { label: "Announcements", value: announcements.length, color: "bg-orange-500" },
+    { label: "Programs", value: programs.length, color: "bg-light-green" },
+    { label: "Staff Members", value: staff.length, color: "bg-green-light" },
+    { label: "Facilities", value: facilities.length, color: "bg-emerald" },
+    { label: "Announcements", value: announcements.length, color: "bg-ocean-mist" },
   ];
 
   const recentAnnouncements = [...announcements]
@@ -89,13 +90,13 @@ export default function InstitutionOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-xl shadow">
+      <div className="bg-gradient-to-r from-green-light to-ocean-mist text-white p-6 rounded-xl shadow">
         <h1 className="text-2xl font-bold">{institution.name}</h1>
-        <p className="text-blue-100 mt-1">
+        <p className="text-light-green-100 mt-1">
           {institution.city} • {institution.isApproved ? "✓ Approved" : "⏳ Pending Approval"}
         </p>
         {institution.description && (
-          <p className="mt-3 text-blue-50 text-sm">{institution.description}</p>
+          <p className="mt-3 text-light-green-50 text-sm">{institution.description}</p>
         )}
       </div>
 
@@ -132,7 +133,7 @@ export default function InstitutionOverview() {
           {institution.email && (
             <div>
               <span className="text-gray-500">Email:</span>{" "}
-              <a href={`mailto:${institution.email}`} className="text-blue-600">
+              <a href={`mailto:${institution.email}`} className="text-light-green-600">
                 {institution.email}
               </a>
             </div>
@@ -145,7 +146,7 @@ export default function InstitutionOverview() {
           {institution.website && (
             <div>
               <span className="text-gray-500">Website:</span>{" "}
-              <a href={institution.website} target="_blank" rel="noopener noreferrer" className="text-blue-600">
+              <a href={institution.website} target="_blank" rel="noopener noreferrer" className="text-light-green-600">
                 {institution.website}
               </a>
             </div>

@@ -32,9 +32,27 @@ public class InstitutionProfileController(AppDbContext context) : ControllerBase
     public async Task<IActionResult> GetMyProfile()
     {
         var institution = await GetMyInstitution();
-        if (institution == null) return NotFound();
 
-        return Ok(institution);
+        if (institution == null)
+            return NotFound();
+
+        var dto = new InstitutionDto
+        {
+            InstitutionId = institution.InstitutionId,
+            InstitutionTypeId = institution.InstitutionTypeId,
+            OwnerUserId = institution.OwnerUserId,
+            Name = institution.Name,
+            Description = institution.Description,
+            City = institution.City,
+            Address = institution.Address,
+            Website = institution.Website,
+            Email = institution.Email,
+            Phone = institution.Phone,
+            IsApproved = institution.IsApproved,
+            CreatedAt = institution.CreatedAt,
+            InstitutionTypeName = institution.InstitutionType?.Name
+        };
+        return Ok(dto);
     }
 
     [HttpPut("my-profile")]
