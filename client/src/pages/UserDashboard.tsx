@@ -68,6 +68,7 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<ApplicationDto | null>(null);
   const [profileForm, setProfileForm] = useState({
     firstName: "",
     lastName: "",
@@ -276,7 +277,11 @@ export default function UserDashboard() {
                 {data.applications.length ? (
                   <div className="divide-y divide-gray-100">
                     {data.applications.slice(0, 3).map((application) => (
-                      <ApplicationRow key={application.applicationId} application={application} />
+                      <ApplicationRow
+                        key={application.applicationId}
+                        application={application}
+                        onOpen={setSelectedApplication}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -312,7 +317,11 @@ export default function UserDashboard() {
               {data.applications.length ? (
                 <motion.div className="divide-y divide-gray-100" variants={listVariants} initial="hidden" animate="visible">
                   {data.applications.map((application) => (
-                    <ApplicationRow key={application.applicationId} application={application} />
+                    <ApplicationRow
+                      key={application.applicationId}
+                      application={application}
+                      onOpen={setSelectedApplication}
+                    />
                   ))}
                 </motion.div>
               ) : (
@@ -401,6 +410,15 @@ export default function UserDashboard() {
           </AnimatePresence>
         </section>
       </div>
+
+      <AnimatePresence>
+        {selectedApplication && (
+          <ApplicationDetailsModal
+            application={selectedApplication}
+            onClose={() => setSelectedApplication(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.main>
   );
 }
@@ -475,7 +493,7 @@ function InstitutionGrid({ institutions, onUnsave }: { institutions: Institution
   );
 }
 
-function ApplicationRow({ application }: { application: ApplicationDto }) {
+function ApplicationRow({ application, onOpen }: { application: ApplicationDto; onOpen: (application: ApplicationDto) => void }) {
   return (
     <motion.article className="py-4" variants={riseVariants} whileHover={{ x: 4 }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -488,8 +506,120 @@ function ApplicationRow({ application }: { application: ApplicationDto }) {
           {statusLabel[application.status] ?? application.status}
         </span>
       </div>
-      <p className="mt-2 text-xs text-gray-400">{formatDate(application.createdAt)}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <p className="text-xs text-gray-400">{formatDate(application.createdAt)}</p>
+        <button
+          type="button"
+          onClick={() => onOpen(application)}
+          className="rounded-md border border-emerald/30 px-3 py-1.5 text-xs font-semibold text-yale-blue transition hover:bg-emerald/10"
+        >
+          Shiko detajet
+        </button>
+        {application.documentFileUrl && (
+          <a
+            href={application.documentFileUrl}
+            download={application.documentFileName || "aplikimi.pdf"}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md bg-emerald px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-ocean-mist"
+          >
+            Shkarko PDF
+          </a>
+        )}
+      </div>
     </motion.article>
+  );
+}
+
+function ApplicationDetailsModal({ application, onClose }: { application: ApplicationDto; onClose: () => void }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/45 px-4 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.section
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl"
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 14, scale: 0.98 }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-emerald">Aplikimi #{application.applicationId}</p>
+            <h2 className="mt-1 text-2xl font-bold text-yale-blue">
+              {application.institutionName || `Institucioni #${application.institutionId}`}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">Derguar me {formatDate(application.createdAt)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-gray-200 px-3 py-1 text-sm font-semibold text-gray-500 transition hover:bg-gray-50"
+          >
+            Mbyll
+          </button>
+        </div>
+
+        <div className="mt-5">
+          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClass[application.status] ?? statusClass.pending}`}>
+            {statusLabel[application.status] ?? application.status}
+          </span>
+        </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <DetailItem label="Emri dhe mbiemri" value={application.fullName} />
+          <DetailItem label="Email" value={application.email} />
+          <DetailItem label="Telefoni" value={application.phone} />
+          <DetailItem label="Niveli i arsimit" value={application.educationLevel} />
+          <DetailItem label="Programi" value={application.selectedProgram || "Nuk eshte zgjedhur"} />
+          <DetailItem label="Institucioni" value={application.institutionName || `#${application.institutionId}`} />
+        </div>
+
+        <div className="mt-5 rounded-lg border border-gray-100 bg-gray-50 p-4">
+          <p className="text-xs font-semibold uppercase text-gray-400">Mesazhi</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+            {application.message || "Nuk ka mesazh te shtuar."}
+          </p>
+        </div>
+
+        <div className="mt-5 rounded-lg border border-emerald/20 bg-emerald/5 p-4">
+          <p className="text-xs font-semibold uppercase text-gray-500">Dokumenti PDF</p>
+          {application.documentFileUrl ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-medium text-yale-blue">
+                {application.documentFileName || "Dokumenti i aplikimit.pdf"}
+              </span>
+              <a
+                href={application.documentFileUrl}
+                download={application.documentFileName || "aplikimi.pdf"}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white transition hover:bg-ocean-mist"
+              >
+                Shkarko PDF
+              </a>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-gray-600">
+              Nuk ka PDF te lidhur me kete aplikim. Aplikimet e vjetra kane ruajtur vetem emrin e dokumentit ne mesazh.
+            </p>
+          )}
+        </div>
+      </motion.section>
+    </motion.div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="rounded-lg border border-gray-100 p-3">
+      <p className="text-xs font-semibold uppercase text-gray-400">{label}</p>
+      <p className="mt-1 text-sm font-medium text-gray-800">{value || "N/A"}</p>
+    </div>
   );
 }
 

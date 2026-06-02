@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EduKos.Domain.Entities;
+using EduKos.Application.DTOs.Education;
 using System.Security.Claims;
 
 namespace EduKos.API.Controllers;
@@ -13,7 +14,9 @@ namespace EduKos.API.Controllers;
 public class InstitutionStaffController(AppDbContext context) : ControllerBase
 {
     private int GetUserId()
-        => int.Parse(User.FindFirst("sub")?.Value ?? "0");
+        => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
+            ? userId
+            : throw new UnauthorizedAccessException("Invalid user.");
 
     private async Task<int?> GetInstitutionId()
     {
@@ -34,31 +37,42 @@ public class InstitutionStaffController(AppDbContext context) : ControllerBase
             .Where(x => x.InstitutionId == institutionId)
             .ToListAsync();
 
-        return Ok(staff);
+        return Ok(staff.Select(Map));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(InstitutionStaff entity)
+    public async Task<IActionResult> Create(CreateStaffRequestDto dto)
     {
         var institutionId = await GetInstitutionId();
         if (institutionId == null) return NotFound();
 
-        entity.InstitutionId = institutionId.Value;
+        var entity = new InstitutionStaff
+        {
+            InstitutionId = institutionId.Value,
+            FullName = dto.FullName,
+            Position = dto.Position,
+            PhotoFileId = dto.PhotoFileId
+        };
 
         context.InstitutionStaff.Add(entity);
         await context.SaveChangesAsync();
 
-        return Ok(entity);
+        return Ok(Map(entity));
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, InstitutionStaff dto)
+    public async Task<IActionResult> Update(int id, UpdateStaffRequestDto dto)
     {
-        var staff = await context.InstitutionStaff.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound();
+
+        var staff = await context.InstitutionStaff
+            .FirstOrDefaultAsync(x => x.StaffId == id && x.InstitutionId == institutionId.Value);
         if (staff == null) return NotFound();
 
-        staff.FullName = dto.FullName;
-        staff.Position = dto.Position;
+        if (dto.FullName is not null) staff.FullName = dto.FullName;
+        if (dto.Position is not null) staff.Position = dto.Position;
+        staff.PhotoFileId = dto.PhotoFileId;
 
         await context.SaveChangesAsync();
         return NoContent();
@@ -67,7 +81,11 @@ public class InstitutionStaffController(AppDbContext context) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var staff = await context.InstitutionStaff.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound();
+
+        var staff = await context.InstitutionStaff
+            .FirstOrDefaultAsync(x => x.StaffId == id && x.InstitutionId == institutionId.Value);
         if (staff == null) return NotFound();
 
         context.InstitutionStaff.Remove(staff);
@@ -75,4 +93,14 @@ public class InstitutionStaffController(AppDbContext context) : ControllerBase
 
         return NoContent();
     }
+
+    private static InstitutionStaffDto Map(InstitutionStaff entity)
+        => new()
+        {
+            StaffId = entity.StaffId,
+            InstitutionId = entity.InstitutionId,
+            FullName = entity.FullName,
+            Position = entity.Position,
+            PhotoFileId = entity.PhotoFileId
+        };
 }

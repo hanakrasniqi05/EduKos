@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EduKos.Domain.Entities;
+using EduKos.Application.DTOs.Education;
 using System.Security.Claims;
 
 namespace EduKos.API.Controllers;
@@ -13,7 +14,9 @@ namespace EduKos.API.Controllers;
 public class InstitutionFacilitiesController(AppDbContext context) : ControllerBase
 {
     private int GetUserId()
-        => int.Parse(User.FindFirst("sub")?.Value ?? "0");
+        => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
+            ? userId
+            : throw new UnauthorizedAccessException("Invalid user.");
 
     private async Task<int?> GetInstitutionId()
     {
@@ -37,29 +40,40 @@ public class InstitutionFacilitiesController(AppDbContext context) : ControllerB
             .Where(x => x.InstitutionId == institution.InstitutionId)
             .ToListAsync();
 
-        return Ok(facilities);
+        return Ok(facilities.Select(Map));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(InstitutionFacility entity)
+    public async Task<IActionResult> Create(CreateFacilityRequestDto dto)
     {
         var institutionId = await GetInstitutionId();
-        entity.InstitutionId = institutionId!.Value;
+        if (institutionId == null) return NotFound();
+
+        var entity = new InstitutionFacility
+        {
+            InstitutionId = institutionId.Value,
+            Name = dto.Name,
+            Description = dto.Description
+        };
 
         context.InstitutionFacilities.Add(entity);
         await context.SaveChangesAsync();
 
-        return Ok(entity);
+        return Ok(Map(entity));
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, InstitutionFacility dto)
+    public async Task<IActionResult> Update(int id, UpdateFacilityRequestDto dto)
     {
-        var item = await context.InstitutionFacilities.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound();
+
+        var item = await context.InstitutionFacilities
+            .FirstOrDefaultAsync(x => x.FacilityId == id && x.InstitutionId == institutionId.Value);
         if (item == null) return NotFound();
 
-        item.Name = dto.Name;
-        item.Description = dto.Description;
+        if (dto.Name is not null) item.Name = dto.Name;
+        if (dto.Description is not null) item.Description = dto.Description;
 
         await context.SaveChangesAsync();
         return NoContent();
@@ -68,7 +82,11 @@ public class InstitutionFacilitiesController(AppDbContext context) : ControllerB
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var item = await context.InstitutionFacilities.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound();
+
+        var item = await context.InstitutionFacilities
+            .FirstOrDefaultAsync(x => x.FacilityId == id && x.InstitutionId == institutionId.Value);
         if (item == null) return NotFound();
 
         context.InstitutionFacilities.Remove(item);
@@ -76,4 +94,13 @@ public class InstitutionFacilitiesController(AppDbContext context) : ControllerB
 
         return NoContent();
     }
+
+    private static InstitutionFacilityDto Map(InstitutionFacility entity)
+        => new()
+        {
+            FacilityId = entity.FacilityId,
+            InstitutionId = entity.InstitutionId,
+            Name = entity.Name,
+            Description = entity.Description
+        };
 }

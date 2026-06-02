@@ -1,8 +1,10 @@
 using EduKos.Application.DTOs.Education;
 using EduKos.Domain.Entities;
 using EduKos.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EduKos.API.Controllers;
 
@@ -52,11 +54,66 @@ public class NotificationsController(AppDbContext context) : CrudControllerBase<
 }
 
 [Route("api/[controller]")]
+[Authorize]
 public class FilesController(AppDbContext context) : CrudControllerBase<FileAsset, FileDto>(context)
 {
     protected override DbSet<FileAsset> Set => Context.Files;
     protected override int GetId(FileAsset entity) => entity.FileId;
     protected override void SetId(FileAsset entity, int id) => entity.FileId = id;
+
+    [HttpPost("upload")]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<ActionResult<FileDto>> Upload(IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file.Length == 0)
+            return BadRequest(new { message = "File is required." });
+
+        if (!string.Equals(Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Only PDF files are allowed." });
+
+        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        Directory.CreateDirectory(uploadsPath);
+
+        var storedName = $"{Guid.NewGuid():N}.pdf";
+        var storedPath = Path.Combine(uploadsPath, storedName);
+
+        await using (var stream = System.IO.File.Create(storedPath))
+        {
+            await file.CopyToAsync(stream, cancellationToken);
+        }
+
+        var entity = new FileAsset
+        {
+            UploadedByUserId = CurrentUserId(),
+            FileName = Path.GetFileName(file.FileName),
+            FileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{storedName}",
+            FileType = file.ContentType
+        };
+
+        await Context.Files.AddAsync(entity, cancellationToken);
+        await Context.SaveChangesAsync(cancellationToken);
+
+        return Ok(MapToDto(entity));
+    }
+
+    [HttpGet("mine")]
+    public async Task<ActionResult<IEnumerable<FileDto>>> GetMine(CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        var files = await Context.Files
+            .AsNoTracking()
+            .Where(x => x.UploadedByUserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return Ok(files.Select(MapToDto));
+    }
+
+    private int CurrentUserId()
+    {
+        var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(value, out var userId) ? userId : throw new UnauthorizedAccessException("Invalid user.");
+    }
 }
 
 [Route("api/[controller]")]

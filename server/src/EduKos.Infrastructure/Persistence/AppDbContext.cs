@@ -122,6 +122,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
             entity.HasOne(e => e.Institution).WithMany().HasForeignKey(e => e.InstitutionId);
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.DocumentFile).WithMany().HasForeignKey(e => e.DocumentFileId).OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<Setting>(entity =>

@@ -7,6 +7,7 @@ import Navbar from "../sections/NavBar";
 import UserDashboard from "../pages/UserDashboard";
 import AdminDashboard from "../pages/AdminDashboard";
 import InstitutionDashboard from "../pages/InstitutionDashboard";
+import InstitutionDetails from "../pages/InstitutionDetails";
 import LogIn from "../pages/LogIn";
 import SignUp from "../pages/SignUp";
 import AboutUs from "../pages/AboutUs";
@@ -28,6 +29,7 @@ const App: React.FC = () => {
         <Route path="/shkollat-fillore" element={<InstitutionListing title="Shkollat Fillore" description="Krahaso shkollat fillore." typeNames={["Shkolla fillore"]} />} />
         <Route path="/shkollat-e-mesme" element={<InstitutionListing title="Shkollat e Mesme" description="Eksploro shkollat e mesme." typeNames={["Shkolla e mesme"]} />} />
         <Route path="/universitetet" element={<InstitutionListing title="Fakultetet" description="Zbulo fakultetet në Kosovë." typeNames={["Fakultete"]} />} />
+        <Route path="/institutions/:institutionId" element={<InstitutionDetails />} />
         <Route path="/dashboard" element={<DashboardRedirect />} />
         <Route
           path="/dashboard/user"

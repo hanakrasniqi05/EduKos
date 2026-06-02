@@ -8,6 +8,7 @@ import {
   submitApplication,
   type InstitutionDto,
   type InstitutionProgramDto,
+  uploadApplicationDocument,
 } from "../lib/api";
 
 const EDUCATION_LEVELS = [
@@ -32,6 +33,7 @@ export default function Apply() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [documentName, setDocumentName] = useState("");
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     institutionId: preselectedId,
     fullName: "",
@@ -106,10 +108,9 @@ export default function Apply() {
     setSubmitting(true);
     setError("");
 
-    const documentNote = documentName ? `\n\n[Dokument: ${documentName}]` : "";
-    const message = `${form.message.trim()}${documentNote}`.trim() || undefined;
-
     try {
+      const uploadedDocument = documentFile ? await uploadApplicationDocument(documentFile) : null;
+
       await submitApplication({
         institutionId: Number(form.institutionId),
         fullName: form.fullName.trim(),
@@ -117,7 +118,8 @@ export default function Apply() {
         phone: form.phone.trim(),
         educationLevel: form.educationLevel,
         selectedProgram: form.selectedProgram || undefined,
-        message,
+        message: form.message.trim() || undefined,
+        documentFileId: uploadedDocument?.fileId,
       });
 
       setSuccess(true);
@@ -131,6 +133,7 @@ export default function Apply() {
 
   function handleDocumentChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    setDocumentFile(file ?? null);
     setDocumentName(file?.name ?? "");
   }
 
@@ -284,15 +287,15 @@ export default function Apply() {
               />
             </AuthField>
 
-            <AuthField label="Dokumenti (placeholder)">
+            <AuthField label="Dokumenti PDF">
               <input
                 type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                accept=".pdf"
                 onChange={handleDocumentChange}
                 className="w-full rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#76C893] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-gray-900"
               />
               <p className="text-xs text-gray-500">
-                Ngarkimi i dokumenteve ne server do te aktivizohet se shpejti. Emri i skedarit ruhet ne mesazh.
+                Ngarko vetem PDF. Dokumenti do te ruhet me aplikimin dhe mund te shkarkohet nga dashboard-i.
               </p>
               {documentName && (
                 <p className="text-xs font-medium text-emerald-700">Skedari i zgjedhur: {documentName}</p>

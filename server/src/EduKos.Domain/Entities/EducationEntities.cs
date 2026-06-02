@@ -99,11 +99,13 @@ public class InstitutionApplication
     public string EducationLevel { get; set; } = default!;
     public string? SelectedProgram { get; set; }
     public string? Message { get; set; }
+    public int? DocumentFileId { get; set; }
     public string Status { get; set; } = "pending";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Institution Institution { get; set; } = default!;
     public User? User { get; set; }
+    public FileAsset? DocumentFile { get; set; }
 }
 
 public class Setting

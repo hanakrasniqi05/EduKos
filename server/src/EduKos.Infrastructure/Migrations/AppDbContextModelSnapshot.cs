@@ -203,6 +203,9 @@ namespace EduKos.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<int?>("DocumentFileId")
+                        .HasColumnType("int");
+
                     b.Property<string>("EducationLevel")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -246,6 +249,8 @@ namespace EduKos.Infrastructure.Migrations
                     b.HasKey("ApplicationId");
 
                     b.HasIndex("InstitutionId");
+
+                    b.HasIndex("DocumentFileId");
 
                     b.HasIndex("UserId");
 
@@ -982,10 +987,17 @@ namespace EduKos.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("EduKos.Domain.Entities.FileAsset", "DocumentFile")
+                        .WithMany()
+                        .HasForeignKey("DocumentFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("EduKos.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("DocumentFile");
 
                     b.Navigation("Institution");
 

@@ -15,7 +15,9 @@ public class InstitutionProgramsController(AppDbContext context)
     : ControllerBase
 {
     private int GetUserId() =>
-        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
+            ? userId
+            : throw new UnauthorizedAccessException("Invalid user.");
 
     private async Task<int?> GetInstitutionId()
     {
@@ -40,14 +42,14 @@ public class InstitutionProgramsController(AppDbContext context)
             .Where(x => x.InstitutionId == institution.InstitutionId)
             .ToListAsync();
 
-        return Ok(programs);
+        return Ok(programs.Select(Map));
     }
 
     [HttpPost]
     public async Task<ActionResult<InstitutionProgramDto>> Create(InstitutionProgramDto dto, CancellationToken ct)
     {
         var institutionId = await GetInstitutionId();
-        if (institutionId == null) return NotFound();
+        if (institutionId == null) return NotFound(new { message = "Institution profile not found for current user." });
 
         var entity = new InstitutionProgram
         {
@@ -55,6 +57,8 @@ public class InstitutionProgramsController(AppDbContext context)
             Level = dto.Level,
             Description = dto.Description,
             Duration = dto.Duration,
+            TuitionFee = dto.TuitionFee,
+            ECTS = dto.ECTS,
             InstitutionId = institutionId.Value
         };
 
@@ -67,13 +71,19 @@ public class InstitutionProgramsController(AppDbContext context)
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, InstitutionProgramDto dto, CancellationToken ct)
     {
-        var entity = await context.InstitutionPrograms.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound(new { message = "Institution profile not found for current user." });
+
+        var entity = await context.InstitutionPrograms
+            .FirstOrDefaultAsync(x => x.ProgramId == id && x.InstitutionId == institutionId.Value, ct);
         if (entity == null) return NotFound();
 
         entity.Name = dto.Name;
         entity.Level = dto.Level;
         entity.Description = dto.Description;
         entity.Duration = dto.Duration;
+        entity.TuitionFee = dto.TuitionFee;
+        entity.ECTS = dto.ECTS;
 
         await context.SaveChangesAsync(ct);
         return NoContent();
@@ -82,7 +92,11 @@ public class InstitutionProgramsController(AppDbContext context)
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        var entity = await context.InstitutionPrograms.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound(new { message = "Institution profile not found for current user." });
+
+        var entity = await context.InstitutionPrograms
+            .FirstOrDefaultAsync(x => x.ProgramId == id && x.InstitutionId == institutionId.Value, ct);
         if (entity == null) return NotFound();
 
         context.InstitutionPrograms.Remove(entity);
@@ -98,6 +112,8 @@ public class InstitutionProgramsController(AppDbContext context)
             Name = e.Name,
             Level = e.Level,
             Description = e.Description,
-            Duration = e.Duration
+            Duration = e.Duration,
+            TuitionFee = e.TuitionFee,
+            ECTS = e.ECTS
         };
 }

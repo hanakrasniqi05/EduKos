@@ -66,6 +66,17 @@ public class ApplicationsController(AppDbContext context) : ControllerBase
     public async Task<ActionResult<ApplicationDto>> Create([FromBody] ApplicationDto dto, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
+
+        if (dto.DocumentFileId.HasValue)
+        {
+            var ownsDocument = await context.Files.AnyAsync(
+                x => x.FileId == dto.DocumentFileId.Value && x.UploadedByUserId == userId,
+                cancellationToken);
+
+            if (!ownsDocument)
+                return BadRequest(new { message = "Selected document was not found for this user." });
+        }
+
         var application = new InstitutionApplication
         {
             InstitutionId = dto.InstitutionId,
@@ -76,6 +87,7 @@ public class ApplicationsController(AppDbContext context) : ControllerBase
             EducationLevel = dto.EducationLevel,
             SelectedProgram = dto.SelectedProgram,
             Message = dto.Message,
+            DocumentFileId = dto.DocumentFileId,
             Status = "pending"
         };
 
@@ -112,7 +124,8 @@ public class ApplicationsController(AppDbContext context) : ControllerBase
     private IQueryable<InstitutionApplication> BaseQuery() =>
         context.Applications
             .AsNoTracking()
-            .Include(x => x.Institution);
+            .Include(x => x.Institution)
+            .Include(x => x.DocumentFile);
 
     private int CurrentUserId()
     {
@@ -131,6 +144,9 @@ public class ApplicationsController(AppDbContext context) : ControllerBase
         EducationLevel = application.EducationLevel,
         SelectedProgram = application.SelectedProgram,
         Message = application.Message,
+        DocumentFileId = application.DocumentFileId,
+        DocumentFileName = application.DocumentFile?.FileName,
+        DocumentFileUrl = application.DocumentFile?.FileUrl,
         Status = application.Status,
         CreatedAt = application.CreatedAt,
         InstitutionName = application.Institution?.Name

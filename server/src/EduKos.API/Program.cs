@@ -7,6 +7,7 @@ using Scalar.AspNetCore;
 using System.Text;
 using EduKos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +55,9 @@ builder.Services.AddCors(options =>
         });
 });
 
+var uploadsRoot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(Path.Combine(uploadsRoot, "uploads"));
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -70,6 +74,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot)
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

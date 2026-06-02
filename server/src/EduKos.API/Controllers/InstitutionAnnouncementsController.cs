@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EduKos.Domain.Entities;
+using EduKos.Application.DTOs.Education;
 using System.Security.Claims;
 
 namespace EduKos.API.Controllers;
@@ -13,7 +14,9 @@ namespace EduKos.API.Controllers;
 public class InstitutionAnnouncementsController(AppDbContext context) : ControllerBase
 {
     private int GetUserId()
-        => int.Parse(User.FindFirst("sub")?.Value ?? "0");
+        => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
+            ? userId
+            : throw new UnauthorizedAccessException("Invalid user.");
 
     private async Task<int?> GetInstitutionId()
     {
@@ -37,28 +40,40 @@ public class InstitutionAnnouncementsController(AppDbContext context) : Controll
             .Where(x => x.InstitutionId == institution.InstitutionId)
             .ToListAsync();
 
-        return Ok(announcements);
+        return Ok(announcements.Select(Map));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(InstitutionAnnouncement entity)
+    public async Task<IActionResult> Create(CreateAnnouncementRequestDto dto)
     {
-        entity.InstitutionId = (await GetInstitutionId())!.Value;
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound();
+
+        var entity = new InstitutionAnnouncement
+        {
+            InstitutionId = institutionId.Value,
+            Title = dto.Title,
+            Content = dto.Content
+        };
 
         context.InstitutionAnnouncements.Add(entity);
         await context.SaveChangesAsync();
 
-        return Ok(entity);
+        return Ok(Map(entity));
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, InstitutionAnnouncement dto)
+    public async Task<IActionResult> Update(int id, UpdateAnnouncementRequestDto dto)
     {
-        var item = await context.InstitutionAnnouncements.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound();
+
+        var item = await context.InstitutionAnnouncements
+            .FirstOrDefaultAsync(x => x.AnnouncementId == id && x.InstitutionId == institutionId.Value);
         if (item == null) return NotFound();
 
-        item.Title = dto.Title;
-        item.Content = dto.Content;
+        if (dto.Title is not null) item.Title = dto.Title;
+        if (dto.Content is not null) item.Content = dto.Content;
 
         await context.SaveChangesAsync();
         return NoContent();
@@ -67,7 +82,11 @@ public class InstitutionAnnouncementsController(AppDbContext context) : Controll
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var item = await context.InstitutionAnnouncements.FindAsync(id);
+        var institutionId = await GetInstitutionId();
+        if (institutionId == null) return NotFound();
+
+        var item = await context.InstitutionAnnouncements
+            .FirstOrDefaultAsync(x => x.AnnouncementId == id && x.InstitutionId == institutionId.Value);
         if (item == null) return NotFound();
 
         context.InstitutionAnnouncements.Remove(item);
@@ -75,4 +94,14 @@ public class InstitutionAnnouncementsController(AppDbContext context) : Controll
 
         return NoContent();
     }
+
+    private static InstitutionAnnouncementDto Map(InstitutionAnnouncement entity)
+        => new()
+        {
+            AnnouncementId = entity.AnnouncementId,
+            InstitutionId = entity.InstitutionId,
+            Title = entity.Title,
+            Content = entity.Content,
+            CreatedAt = entity.CreatedAt
+        };
 }

@@ -104,9 +104,21 @@ export type ApplicationDto = {
   educationLevel: string;
   selectedProgram?: string;
   message?: string;
+  documentFileId?: number;
+  documentFileName?: string;
+  documentFileUrl?: string;
   status: "pending" | "approved" | "rejected" | string;
   createdAt: string;
   institutionName?: string;
+};
+
+export type FileDto = {
+  fileId: number;
+  uploadedByUserId?: number;
+  fileName: string;
+  fileUrl: string;
+  fileType?: string;
+  createdAt: string;
 };
 
 export type DashboardData = {
@@ -143,6 +155,24 @@ export type InstitutionFacilityDto = {
   description?: string;
 };
 
+export type InstitutionDetailDto = {
+  institutionDetailId: number;
+  institutionId: number;
+  ageGroups?: string;
+  dailySchedule?: string;
+  outdoorSpaces?: boolean;
+  securityInfo?: string;
+  gradesOffered?: string;
+  curriculum?: string;
+  extracurricularActivities?: string;
+  classSize?: number;
+  directions?: string;
+  admissionInfo?: string;
+  departments?: string;
+  ectsInfo?: string;
+  exchangePrograms?: string;
+};
+
 export type InstitutionAnnouncementDto = {
   announcementId: number;
   institutionId: number;
@@ -153,6 +183,7 @@ export type InstitutionAnnouncementDto = {
 
 export type InstitutionFullDetailsDto = {
   institution: InstitutionDto;
+  details?: InstitutionDetailDto;
   programs: InstitutionProgramDto[];
   staff: InstitutionStaffDto[];
   facilities: InstitutionFacilityDto[];
@@ -429,6 +460,37 @@ export async function submitApplication(
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+export async function uploadApplicationDocument(file: File) {
+  const auth = getStoredAuth();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const headers = new Headers();
+  if (auth?.accessToken) {
+    headers.set("Authorization", `Bearer ${auth.accessToken}`);
+  }
+
+  const response = await fetch(`${API_BASE_URL}/files/upload`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let message = "Document upload failed";
+    try {
+      const body = await response.json();
+      message = body.message ?? message;
+    } catch {
+      message = response.statusText || message;
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json() as Promise<FileDto>;
 }
 
 export async function updateApplicationStatus(

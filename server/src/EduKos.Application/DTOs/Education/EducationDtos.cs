@@ -153,6 +153,9 @@ public class ApplicationDto
     [Required, MaxLength(100)] public string EducationLevel { get; set; } = default!;
     [MaxLength(255)] public string? SelectedProgram { get; set; }
     public string? Message { get; set; }
+    public int? DocumentFileId { get; set; }
+    public string? DocumentFileName { get; set; }
+    public string? DocumentFileUrl { get; set; }
     [MaxLength(50)] public string Status { get; set; } = "pending";
     public DateTime CreatedAt { get; set; }
     public string? InstitutionName { get; set; }

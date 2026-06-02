@@ -108,18 +108,12 @@ const InstitutionCard: React.FC<Props> = ({
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-2">
-          {website ? (
-            <a
-              href={website}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm font-semibold text-emerald-700 hover:text-emerald-900"
-            >
-              View More
-            </a>
-          ) : (
-            <span className="text-sm text-gray-400">Pa website</span>
-          )}
+          <Link
+            to={`/institutions/${institution.institutionId}`}
+            className="text-sm font-semibold text-emerald-700 hover:text-emerald-900"
+          >
+            View More
+          </Link>
 
           <Link
             to={`/apply?institutionId=${institution.institutionId}`}
@@ -128,6 +122,16 @@ const InstitutionCard: React.FC<Props> = ({
             Apply
           </Link>
         </div>
+        {website && (
+          <a
+            href={website}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex text-xs font-semibold text-gray-500 hover:text-emerald-700"
+          >
+            Website
+          </a>
+        )}
       </div>
     </article>
   );
