@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../assets/edukos-green.png";
-import { ROLES } from "../lib/api";
+import { ROLES, type InstitutionTypeDto, getInstitutionTypes } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 type NavbarRole = "guest" | "student" | "institution" | "admin";
@@ -10,13 +10,6 @@ type NavbarRole = "guest" | "student" | "institution" | "admin";
 type NavItem =
   | { type: "link"; label: string; to: string }
   | { type: "explore" };
-
-const exploreLinks = [
-  { label: "Çerdhet", to: "/cerdhet" },
-  { label: "Shkollat Fillore", to: "/shkollat-fillore" },
-  { label: "Shkollat e Mesme", to: "/shkollat-e-mesme" },
-  { label: "Universitetet", to: "/universitetet" },
-];
 
 const roleNavItems: Record<NavbarRole, NavItem[]> = {
   guest: [
@@ -53,8 +46,23 @@ const Navbar: React.FC = () => {
   const { auth, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [institutionTypes, setInstitutionTypes] = useState<InstitutionTypeDto[]>([]);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    async function load() {
+      try {
+        const types = await getInstitutionTypes();
+        setInstitutionTypes(types);
+      } catch (err) {
+        console.error("Failed to load institution types", err);
+      }
+    }
+
+    load();
+  }, []);
+
+  // CLOSE DROPDOWN ON OUTSIDE CLICK
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -77,35 +85,16 @@ const Navbar: React.FC = () => {
     navigate("/");
   }
 
+  const exploreLinks = institutionTypes.map((t) => ({
+    label: t.name,
+    to: `/explore/${t.institutionTypeId}`,
+  }));
+
   const dropdownVariants = {
     hidden: { opacity: 0, y: -10, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2 } },
     exit: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.15 } },
   };
-
-  const authButtons = auth ? (
-    <>
-      <button
-        onClick={handleLogout}
-        className="px-5 py-2 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-200 transition"
-      >
-        Dil
-      </button>
-    </>
-  ) : (
-    <>
-      <Link to="/login">
-        <button className="px-4 py-2 rounded-xl border border-gray-700 text-gray-800 hover:bg-white/30 transition">
-          Kyçu
-        </button>
-      </Link>
-      <Link to="/signup">
-        <button className="px-5 py-2 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-200 transition">
-          Regjistrohu
-        </button>
-      </Link>
-    </>
-  );
 
   const renderExploreDropdown = () => (
     <AnimatePresence>
@@ -142,6 +131,7 @@ const Navbar: React.FC = () => {
           >
             Eksploro <span className="text-xs">▼</span>
           </button>
+
           {renderExploreDropdown()}
         </div>
       );
@@ -196,18 +186,42 @@ const Navbar: React.FC = () => {
     );
   };
 
+  const authButtons = auth ? (
+    <button
+      onClick={handleLogout}
+      className="px-5 py-2 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-200 transition"
+    >
+      Dil
+    </button>
+  ) : (
+    <>
+      <Link to="/login">
+        <button className="px-4 py-2 rounded-xl border border-gray-700 text-gray-800 hover:bg-white/30 transition">
+          Kyçu
+        </button>
+      </Link>
+      <Link to="/signup">
+        <button className="px-5 py-2 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-200 transition">
+          Regjistrohu
+        </button>
+      </Link>
+    </>
+  );
+
   return (
     <nav className="w-full flex justify-center mt-4 relative z-[9999]">
       <div className="w-[95%] md:w-[90%] bg-[var(--color-emerald)]/70 backdrop-blur-md rounded-2xl px-6 py-3 flex items-center justify-between shadow-lg border border-white/20 relative">
+        
         <Link to="/" className="flex items-center gap-3 z-10">
           <img src={logoImg} alt="Logo" className="h-10 w-auto" />
         </Link>
-
         <div className="hidden md:flex items-center gap-8 text-gray-800 font-medium absolute left-1/2 -translate-x-1/2">
           {navItems.map(renderDesktopNavItem)}
         </div>
 
-        <div className="hidden md:flex items-center gap-3 z-10">{authButtons}</div>
+        <div className="hidden md:flex items-center gap-3 z-10">
+          {authButtons}
+        </div>
 
         <button
           className="md:hidden text-3xl text-gray-800"
