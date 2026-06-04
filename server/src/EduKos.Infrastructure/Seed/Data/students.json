@@ -1,0 +1,162 @@
+[
+  {
+    "email": "arta.berisha@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Arta",
+    "lastName": "Berisha",
+    "phoneNumber": "+38344100101",
+    "profile": {
+      "bio": "Nxenese e interesuar per teknologji dhe matematike.",
+      "city": "Prishtine"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Xhevdet Doda",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Shkenca natyrore",
+        "startYear": 2022
+      }
+    ],
+    "interests": ["Teknologji", "Matematike", "Inxhinieri"]
+  },
+  {
+    "email": "dion.gashi@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Dion",
+    "lastName": "Gashi",
+    "phoneNumber": "+38344100102",
+    "profile": {
+      "bio": "Nxenes qe kerkon programe universitare ne ekonomi.",
+      "city": "Prizren"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Gjon Buzuku",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Shoqerore",
+        "startYear": 2021
+      }
+    ],
+    "interests": ["Ekonomi", "Menaxhim", "Biznes"]
+  },
+  {
+    "email": "elira.krasniqi@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Elira",
+    "lastName": "Krasniqi",
+    "phoneNumber": "+38344100103",
+    "profile": {
+      "bio": "E interesuar per edukim, psikologji dhe pune me femije.",
+      "city": "Peje"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Bedri Pejani",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Gjuhesor",
+        "startYear": 2022
+      }
+    ],
+    "interests": ["Psikologji", "Edukimi parashkollor", "Gjuhe"]
+  },
+  {
+    "email": "leon.morina@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Leon",
+    "lastName": "Morina",
+    "phoneNumber": "+38344100104",
+    "profile": {
+      "bio": "Nxenes me fokus ne shkenca kompjuterike dhe robotike.",
+      "city": "Gjakove"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Hajdar Dushi",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Shkenca natyrore",
+        "startYear": 2021
+      }
+    ],
+    "interests": ["Programim", "Robotike", "Fizike"]
+  },
+  {
+    "email": "nora.rugova@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Nora",
+    "lastName": "Rugova",
+    "phoneNumber": "+38344100105",
+    "profile": {
+      "bio": "Kerkon institucione me programe te forta ne mjekesi.",
+      "city": "Mitrovice"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Frang Bardhi",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Shkenca natyrore",
+        "startYear": 2022
+      }
+    ],
+    "interests": ["Mjekesi", "Biologji", "Kimi"]
+  },
+  {
+    "email": "rinor.hoxha@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Rinor",
+    "lastName": "Hoxha",
+    "phoneNumber": "+38344100106",
+    "profile": {
+      "bio": "I interesuar per universitetet dhe programet juridike.",
+      "city": "Ferizaj"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Kuvendi i Arberit",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Shoqerore",
+        "startYear": 2021
+      }
+    ],
+    "interests": ["Juridik", "Administrate publike", "Histori"]
+  },
+  {
+    "email": "blerta.salihu@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Blerta",
+    "lastName": "Salihu",
+    "phoneNumber": "+38344100107",
+    "profile": {
+      "bio": "Nxenese qe kerkon shkolla dhe programe artistike.",
+      "city": "Gjilan"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Zenel Hajdini",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Arte",
+        "startYear": 2022
+      }
+    ],
+    "interests": ["Dizajn", "Muzike", "Media"]
+  },
+  {
+    "email": "ilir.bytyqi@student.edukos.com",
+    "password": "Student123!",
+    "firstName": "Ilir",
+    "lastName": "Bytyqi",
+    "phoneNumber": "+38344100108",
+    "profile": {
+      "bio": "Kerkon fakultete me fokus ne arkitekture dhe ndertim.",
+      "city": "Prishtine"
+    },
+    "educationHistory": [
+      {
+        "schoolName": "Gjimnazi Sami Frasheri",
+        "educationLevel": "Shkolla e mesme",
+        "fieldOfStudy": "Shkenca natyrore",
+        "startYear": 2021
+      }
+    ],
+    "interests": ["Arkitekture", "Ndertim", "Dizajn urban"]
+  }
+]

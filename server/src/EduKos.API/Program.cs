@@ -90,6 +90,7 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await context.Database.MigrateAsync();
     await RoleSeeder.SeedRolesAsync(context);
+    await DemoDataSeeder.SeedAsync(context);
 }
 
 app.Run();

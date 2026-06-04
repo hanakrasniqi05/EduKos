@@ -1,0 +1,276 @@
+[
+  {
+    "institutionTypeName": "Cerdhe",
+    "ownerEmail": "botaefemijeve@edukos.com",
+    "name": "Cerdhja Bota e Femijeve",
+    "description": "Cerdhe me program ditor per zhvillim social, kreativ dhe gjuhesor.",
+    "city": "Prishtine",
+    "address": "Rr. Muharrem Fejza, Prishtine",
+    "email": "info@botaefemijeve.edu",
+    "phone": "+38338111222",
+    "isApproved": true,
+    "details": {
+      "ageGroups": "2-6 vjec",
+      "dailySchedule": "07:30 - 17:30",
+      "outdoorSpaces": true,
+      "securityInfo": "Hyrje e kontrolluar dhe staf i trajnuar.",
+      "extracurricularActivities": "Muzike, art, loje kreative."
+    },
+    "facilities": [
+      { "name": "Oborr i jashtem", "description": "Hapesire e sigurt per loje." },
+      { "name": "Dhoma kreative", "description": "Materiale per art dhe aktivitete praktike." }
+    ],
+    "staff": [
+      { "fullName": "Mimoza Shala", "position": "Drejtore" },
+      { "fullName": "Arbenita Krasniqi", "position": "Edukatore" }
+    ],
+    "announcements": [
+      { "title": "Regjistrimet e reja", "content": "Regjistrimet per vitin e ri jane te hapura." }
+    ]
+  },
+  {
+    "institutionTypeName": "Cerdhe",
+    "ownerEmail": "kopshtidielli@edukos.com",
+    "name": "Kopshti Dielli",
+    "description": "Kopsht privat me fokus ne rutine, loje dhe pergatitje parashkollore.",
+    "city": "Prizren",
+    "address": "Rr. Tirana, Prizren",
+    "email": "kontakt@kopshtidielli.edu",
+    "phone": "+38329111222",
+    "isApproved": true,
+    "details": {
+      "ageGroups": "3-6 vjec",
+      "dailySchedule": "08:00 - 16:30",
+      "outdoorSpaces": true,
+      "securityInfo": "Monitorim ditor dhe komunikim me prinderit."
+    },
+    "facilities": [
+      { "name": "Kuzhine", "description": "Ushqim ditor per femije." },
+      { "name": "Salla e gjumit", "description": "Hapesire e qete per pushim." }
+    ]
+  },
+  {
+    "institutionTypeName": "Shkolla fillore",
+    "ownerEmail": "faikkonica@edukos.com",
+    "name": "Shkolla Fillore Faik Konica",
+    "description": "Shkolle fillore publike me aktivitete STEM dhe klube leximi.",
+    "city": "Prishtine",
+    "address": "Rr. Ilir Konushevci, Prishtine",
+    "email": "info@faikkonica.edu",
+    "phone": "+38338133444",
+    "isApproved": true,
+    "details": {
+      "gradesOffered": "Klasa 1-9",
+      "curriculum": "Kurrikula kombetare",
+      "extracurricularActivities": "Klubi i leximit, robotike, basketboll.",
+      "classSize": 24
+    },
+    "facilities": [
+      { "name": "Laborator kompjuterik", "description": "Pajisje per mesim digjital." },
+      { "name": "Biblioteke", "description": "Koleksion librash per nxenes." }
+    ],
+    "staff": [
+      { "fullName": "Valon Berisha", "position": "Drejtor" },
+      { "fullName": "Teuta Morina", "position": "Mesuese e matematikes" }
+    ]
+  },
+  {
+    "institutionTypeName": "Shkolla fillore",
+    "ownerEmail": "liria@edukos.com",
+    "name": "Shkolla Fillore Liria",
+    "description": "Shkolle fillore me program gjitheperfshires dhe kujdes per nxenesit.",
+    "city": "Peje",
+    "address": "Rr. Mbreteresha Teute, Peje",
+    "email": "info@liria.edu",
+    "phone": "+38339133444",
+    "isApproved": true,
+    "details": {
+      "gradesOffered": "Klasa 1-9",
+      "curriculum": "Kurrikula kombetare",
+      "extracurricularActivities": "Futboll, art, klubi i shkences.",
+      "classSize": 22
+    },
+    "facilities": [
+      { "name": "Salle sportive", "description": "Hapesire per edukate fizike." },
+      { "name": "Kabinet shkencor", "description": "Eksperimente bazike per nxenes." }
+    ]
+  },
+  {
+    "institutionTypeName": "Shkolla e mesme",
+    "ownerEmail": "samifrasheri@edukos.com",
+    "name": "Gjimnazi Sami Frasheri",
+    "description": "Gjimnaz i njohur per rezultate akademike dhe pergatitje universitare.",
+    "city": "Prishtine",
+    "address": "Rr. Garibaldi, Prishtine",
+    "email": "info@samifrasheri.edu",
+    "phone": "+38338155666",
+    "isApproved": true,
+    "details": {
+      "gradesOffered": "Klasa 10-12",
+      "curriculum": "Drejtimet natyrore, shoqerore dhe gjuhesore",
+      "extracurricularActivities": "Debat, olimpiada, teater.",
+      "classSize": 28,
+      "admissionInfo": "Pranimi sipas suksesit dhe kritereve te MASHT."
+    },
+    "programs": [
+      { "name": "Drejtimi Natyrore", "level": "Shkolla e mesme", "duration": "3 vite" },
+      { "name": "Drejtimi Shoqerore", "level": "Shkolla e mesme", "duration": "3 vite" }
+    ],
+    "facilities": [
+      { "name": "Laborator biologjie", "description": "Pajisje per mesim praktik." },
+      { "name": "Auditor", "description": "Hapesire per ngjarje dhe prezantime." }
+    ]
+  },
+  {
+    "institutionTypeName": "Shkolla e mesme",
+    "ownerEmail": "gjonbuzuku@edukos.com",
+    "name": "Gjimnazi Gjon Buzuku",
+    "description": "Gjimnaz ne Prizren me fokus ne mesim modern dhe aktivitete kulturore.",
+    "city": "Prizren",
+    "address": "Rr. Remzi Ademaj, Prizren",
+    "email": "info@gjonbuzuku.edu",
+    "phone": "+38329155666",
+    "isApproved": true,
+    "details": {
+      "gradesOffered": "Klasa 10-12",
+      "curriculum": "Drejtimet natyrore, shoqerore dhe gjuhesore",
+      "extracurricularActivities": "Debat, muzike, sport.",
+      "classSize": 27
+    },
+    "programs": [
+      { "name": "Drejtimi Gjuhesor", "level": "Shkolla e mesme", "duration": "3 vite" },
+      { "name": "Drejtimi Natyrore", "level": "Shkolla e mesme", "duration": "3 vite" }
+    ]
+  },
+  {
+    "institutionTypeName": "Fakultete",
+    "ownerEmail": "unipr@edukos.com",
+    "name": "Universiteti i Prishtines",
+    "description": "Universitet publik me fakultete dhe programe te shumta akademike.",
+    "city": "Prishtine",
+    "address": "Rr. George Bush, Prishtine",
+    "website": "https://uni-pr.edu",
+    "email": "info@uni-pr.edu",
+    "phone": "+38338244000",
+    "isApproved": true,
+    "details": {
+      "departments": "Shkenca kompjuterike, juridik, ekonomi, mjekesi, filologji.",
+      "ECTSInfo": "Programet bachelor zakonisht kane 180-240 ECTS.",
+      "exchangePrograms": "Mundesi shkembimi permes programeve nderkombetare.",
+      "admissionInfo": "Pranimi sipas konkursit publik dhe provimeve pranuese."
+    },
+    "programs": [
+      { "name": "Shkenca Kompjuterike", "level": "Bachelor", "duration": "3 vite", "ECTS": 180 },
+      { "name": "Ekonomi", "level": "Bachelor", "duration": "3 vite", "ECTS": 180 },
+      { "name": "Juridik", "level": "Bachelor", "duration": "4 vite", "ECTS": 240 }
+    ],
+    "facilities": [
+      { "name": "Biblioteke universitare", "description": "Burime akademike dhe salla leximi." },
+      { "name": "Laboratore", "description": "Laboratore per programe shkencore." }
+    ],
+    "announcements": [
+      { "title": "Konkursi per regjistrim", "content": "Konkursi per studentet e rinj publikohet ne faqen zyrtare." }
+    ]
+  },
+  {
+    "institutionTypeName": "Fakultete",
+    "ownerEmail": "uniprizren@edukos.com",
+    "name": "Universiteti i Prizrenit Ukshin Hoti",
+    "description": "Universitet publik rajonal me programe bachelor dhe master.",
+    "city": "Prizren",
+    "address": "Rr. Rruga e Shkronjave, Prizren",
+    "website": "https://uni-prizren.com",
+    "email": "info@uni-prizren.com",
+    "phone": "+38329232000",
+    "isApproved": true,
+    "details": {
+      "departments": "Ekonomi, juridik, edukim, shkenca kompjuterike.",
+      "ECTSInfo": "Programet ndjekin sistemin ECTS.",
+      "exchangePrograms": "Bashkepunime me universitete partnere."
+    },
+    "programs": [
+      { "name": "Informatike Afariste", "level": "Bachelor", "duration": "3 vite", "ECTS": 180 },
+      { "name": "Menaxhment", "level": "Bachelor", "duration": "3 vite", "ECTS": 180 }
+    ],
+    "facilities": [
+      { "name": "Qender karriere", "description": "Keshillim dhe mbeshtetje per studente." },
+      { "name": "Salla kompjuterike", "description": "Hapesira per ushtrime praktike." }
+    ]
+  },
+  {
+    "institutionTypeName": "Fakultete",
+    "ownerEmail": "riinvest@edukos.com",
+    "name": "Kolegji Riinvest",
+    "description": "Kolegj privat me programe ne biznes, ekonomi dhe teknologji.",
+    "city": "Prishtine",
+    "address": "Rr. Lidhja e Prizrenit, Prishtine",
+    "website": "https://riinvest.net",
+    "email": "info@riinvest.net",
+    "phone": "+38338112233",
+    "isApproved": true,
+    "details": {
+      "departments": "Biznes, ekonomi, sisteme informative.",
+      "ECTSInfo": "Programet bachelor kane 180 ECTS.",
+      "admissionInfo": "Aplikimi behet online ose ne zyren e pranimit."
+    },
+    "programs": [
+      { "name": "Menaxhim Biznesi", "level": "Bachelor", "duration": "3 vite", "tuitionFee": 1800, "ECTS": 180 },
+      { "name": "Sisteme Informative", "level": "Bachelor", "duration": "3 vite", "tuitionFee": 1900, "ECTS": 180 }
+    ],
+    "facilities": [
+      { "name": "Inkubator biznesi", "description": "Mbeshtetje per ide studentore." },
+      { "name": "Laborator IT", "description": "Pajisje per projekte teknologjike." }
+    ]
+  },
+  {
+    "institutionTypeName": "Fakultete",
+    "ownerEmail": "ubt@edukos.com",
+    "name": "Kolegji UBT",
+    "description": "Institucion i arsimit te larte me programe ne teknologji, biznes dhe dizajn.",
+    "city": "Prishtine",
+    "address": "Lagjja Kalabria, Prishtine",
+    "website": "https://ubt-uni.net",
+    "email": "info@ubt-uni.net",
+    "phone": "+38338123456",
+    "isApproved": true,
+    "details": {
+      "departments": "Shkenca kompjuterike, arkitekture, dizajn, biznes.",
+      "ECTSInfo": "Programet jane te strukturuara sipas ECTS.",
+      "exchangePrograms": "Mundesi mobiliteti akademik."
+    },
+    "programs": [
+      { "name": "Shkenca Kompjuterike dhe Inxhinieri", "level": "Bachelor", "duration": "3 vite", "tuitionFee": 2200, "ECTS": 180 },
+      { "name": "Arkitekture", "level": "Bachelor", "duration": "3 vite", "tuitionFee": 2300, "ECTS": 180 },
+      { "name": "Dizajn Grafik", "level": "Bachelor", "duration": "3 vite", "tuitionFee": 2000, "ECTS": 180 }
+    ],
+    "facilities": [
+      { "name": "Innovation Center", "description": "Hapesire per projekte dhe startup." },
+      { "name": "Studio dizajni", "description": "Pajisje per pune kreative." }
+    ]
+  },
+  {
+    "institutionTypeName": "Shkolla e mesme",
+    "ownerEmail": "teknike28nentori@edukos.com",
+    "name": "Shkolla e Mesme Teknike 28 Nentori",
+    "description": "Shkolle profesionale me drejtime teknike dhe praktike.",
+    "city": "Prishtine",
+    "address": "Rr. 28 Nentori, Prishtine",
+    "email": "info@28nentori.edu",
+    "phone": "+38338166777",
+    "isApproved": true,
+    "details": {
+      "gradesOffered": "Klasa 10-12",
+      "curriculum": "Drejtimet teknike dhe profesionale",
+      "extracurricularActivities": "Praktike profesionale, gara teknike.",
+      "classSize": 25
+    },
+    "programs": [
+      { "name": "Elektroteknike", "level": "Profesional", "duration": "3 vite" },
+      { "name": "Teknologji Informative", "level": "Profesional", "duration": "3 vite" }
+    ],
+    "facilities": [
+      { "name": "Punetori teknike", "description": "Hapesire per praktike profesionale." },
+      { "name": "Laborator IT", "description": "Kompjutere per ushtrime." }
+    ]
+  }
+]

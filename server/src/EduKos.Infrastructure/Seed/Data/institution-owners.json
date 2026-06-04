@@ -1,0 +1,79 @@
+[
+  {
+    "email": "botaefemijeve@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Bota e Femijeve",
+    "lastName": "EduKos",
+    "phoneNumber": "+38338111222"
+  },
+  {
+    "email": "kopshtidielli@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Kopshti Dielli",
+    "lastName": "EduKos",
+    "phoneNumber": "+38329111222"
+  },
+  {
+    "email": "faikkonica@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Faik Konica",
+    "lastName": "EduKos",
+    "phoneNumber": "+38338133444"
+  },
+  {
+    "email": "liria@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Liria",
+    "lastName": "EduKos",
+    "phoneNumber": "+38339133444"
+  },
+  {
+    "email": "samifrasheri@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Sami Frasheri",
+    "lastName": "EduKos",
+    "phoneNumber": "+38338155666"
+  },
+  {
+    "email": "gjonbuzuku@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Gjon Buzuku",
+    "lastName": "EduKos",
+    "phoneNumber": "+38329155666"
+  },
+  {
+    "email": "unipr@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Universiteti i Prishtines",
+    "lastName": "EduKos",
+    "phoneNumber": "+38338244000"
+  },
+  {
+    "email": "uniprizren@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Universiteti i Prizrenit",
+    "lastName": "EduKos",
+    "phoneNumber": "+38329232000"
+  },
+  {
+    "email": "riinvest@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Kolegji Riinvest",
+    "lastName": "EduKos",
+    "phoneNumber": "+38338112233"
+  },
+  {
+    "email": "ubt@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "Kolegji UBT",
+    "lastName": "EduKos",
+    "phoneNumber": "+38338123456"
+  },
+  {
+    "email": "teknike28nentori@edukos.com",
+    "password": "Shkolla123!",
+    "firstName": "28 Nentori",
+    "lastName": "EduKos",
+    "phoneNumber": "+38338166777"
+  }
+]
