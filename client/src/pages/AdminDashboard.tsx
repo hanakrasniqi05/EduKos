@@ -20,6 +20,7 @@ import {
   updateInstitutionType,
   updateUser,
   getInstitutionFullDetails,
+  updateApplicationStatus,
 } from "../lib/api";
 
 type Section =
@@ -294,7 +295,14 @@ export default function AdminDashboard() {
             {activeSection === "applications" && (
               <motion.div key="applications" variants={riseVariants} initial="hidden" animate="visible" exit="exit">
                 <Panel title="Te gjitha aplikimet">
-                  <ApplicationsTable applications={data.applications} />
+                  <ApplicationsTable
+                    applications={data.applications}
+                    onStatusChange={(id, status) =>
+                      runAction(async () => {
+                        await updateApplicationStatus(id, status);
+                      })
+                    }
+                  />
                 </Panel>
               </motion.div>
             )}
@@ -784,44 +792,156 @@ function ReviewsTable({
 
 function ApplicationsTable({
   applications,
+  onStatusChange,
 }: {
   applications: ApplicationDto[];
+  onStatusChange?: (id: number, status: "approved" | "rejected") => Promise<void>;
 }) {
+  const [selectedApplication, setSelectedApplication] = useState<ApplicationDto | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
   if (!applications.length) {
     return <p className="text-gray-500">Nuk ka aplikime.</p>;
   }
 
+  async function handleStatusChange(status: "approved" | "rejected") {
+    if (!selectedApplication || !onStatusChange) return;
+
+    setUpdatingStatus(true);
+    try {
+      await onStatusChange(selectedApplication.applicationId, status);
+      setSelectedApplication({ ...selectedApplication, status });
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b text-gray-500">
-            <th className="py-2 pr-4">Aplikuesi</th>
-            <th className="py-2 pr-4">Institucioni</th>
-            <th className="py-2 pr-4">Programi</th>
-            <th className="py-2 pr-4">Data</th>
-            <th className="py-2 pr-4">Statusi Aktual</th>
-          </tr>
-        </thead>
-        <tbody>
-          {applications.map((app) => (
-            <tr key={app.applicationId} className="border-b border-gray-50">
-              <td className="py-2 pr-4">
-                <div className="font-medium">{app.fullName}</div>
-                <div className="text-xs text-gray-500">{app.email}</div>
-              </td>
-              <td className="py-2 pr-4">{app.institutionName ?? `#${app.institutionId}`}</td>
-              <td className="py-2 pr-4">{app.selectedProgram || app.educationLevel}</td>
-              <td className="py-2 pr-4 text-xs text-gray-400">{formatDate(app.createdAt)}</td>
-              <td className="py-2 pr-4">
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[app.status] ?? statusClass.pending}`}>
-                  {statusLabel[app.status] ?? app.status}
-                </span>
-              </td>
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b text-gray-500">
+              <th className="py-2 pr-4">Aplikuesi</th>
+              <th className="py-2 pr-4">Institucioni</th>
+              <th className="py-2 pr-4">Programi</th>
+              <th className="py-2 pr-4">Data</th>
+              <th className="py-2 pr-4">Statusi Aktual</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {applications.map((app) => (
+              <tr
+                key={app.applicationId}
+                className="cursor-pointer border-b border-gray-50 hover:bg-emerald/5"
+                onClick={() => setSelectedApplication(app)}
+              >
+                <td className="py-2 pr-4">
+                  <div className="font-medium">{app.fullName}</div>
+                  <div className="text-xs text-gray-500">{app.email}</div>
+                </td>
+                <td className="py-2 pr-4">{app.institutionName ?? `#${app.institutionId}`}</td>
+                <td className="py-2 pr-4">{app.selectedProgram || app.educationLevel}</td>
+                <td className="py-2 pr-4 text-xs text-gray-400">{formatDate(app.createdAt)}</td>
+                <td className="py-2 pr-4">
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[app.status] ?? statusClass.pending}`}>
+                    {statusLabel[app.status] ?? app.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {selectedApplication && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-lg">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-yale-blue">Detajet e aplikimit</h2>
+                <p className="text-sm text-gray-500">
+                  Aplikimi #{selectedApplication.applicationId}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={btnSecondary}
+                onClick={() => setSelectedApplication(null)}
+              >
+                Mbyll
+              </button>
+            </div>
+
+            <div className="grid gap-4 text-sm md:grid-cols-2">
+              <DetailItem label="Aplikuesi" value={selectedApplication.fullName} />
+              <DetailItem label="Email" value={selectedApplication.email} />
+              <DetailItem label="Telefoni" value={selectedApplication.phone} />
+              <DetailItem label="Institucioni" value={selectedApplication.institutionName ?? `#${selectedApplication.institutionId}`} />
+              <DetailItem label="Niveli i edukimit" value={selectedApplication.educationLevel} />
+              <DetailItem label="Programi" value={selectedApplication.selectedProgram || "—"} />
+              <DetailItem label="Data e aplikimit" value={formatDate(selectedApplication.createdAt)} />
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase text-gray-400">Statusi</p>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[selectedApplication.status] ?? statusClass.pending}`}>
+                  {statusLabel[selectedApplication.status] ?? selectedApplication.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <p className="mb-1 text-xs font-semibold uppercase text-gray-400">Mesazhi</p>
+              <p className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-700">
+                {selectedApplication.message || "Nuk ka mesazh."}
+              </p>
+            </div>
+
+            {selectedApplication.documentFileUrl && (
+              <div className="mt-4">
+                <p className="mb-1 text-xs font-semibold uppercase text-gray-400">Dokumenti</p>
+                <a
+                  href={selectedApplication.documentFileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-semibold text-emerald hover:underline"
+                >
+                  {selectedApplication.documentFileName || "Hap dokumentin"}
+                </a>
+              </div>
+            )}
+
+            {onStatusChange && (
+              <div className="mt-6 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+                <button
+                  type="button"
+                  className={btnPrimary}
+                  disabled={updatingStatus || selectedApplication.status === "approved"}
+                  onClick={() => handleStatusChange("approved")}
+                >
+                  Aprovo
+                </button>
+                <button
+                  type="button"
+                  className={btnDanger}
+                  disabled={updatingStatus || selectedApplication.status === "rejected"}
+                  onClick={() => handleStatusChange("rejected")}
+                >
+                  Refuzo
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value?: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs font-semibold uppercase text-gray-400">{label}</p>
+      <p className="text-gray-800">{value || "—"}</p>
     </div>
   );
 }
