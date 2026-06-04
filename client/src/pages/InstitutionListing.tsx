@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   getInstitutionTypes,
@@ -111,15 +111,28 @@ const InstitutionListing: React.FC = () => {
     debouncedOwnership,
   ]);
 
-  const cities = useMemo(() => {
-    return Array.from(
-      new Set(
-        institutions
-          .map((i) => i.city)
-          .filter((city): city is string => Boolean(city))
-      )
-    );
-  }, [institutions]);
+  const cities = [
+    "Prishtine",
+    "Prizren",
+    "Peje",
+    "Gjakove",
+    "Gjilan",
+    "Ferizaj",
+    "Mitrovice",
+    "Podujeve",
+    "Vushtrri",
+    "Suhareke",
+    "Rahovec",
+    "Malisheve",
+    "Lipjan",
+    "Drenas",
+    "Kaçanik",
+    "Istog",
+    "Deçan",
+    "Dragash",
+    "Kamenice",
+    "Skenderaj"
+  ];
 
   return (
     <main className="min-h-screen bg-[#f7fbf3] flex flex-col">
