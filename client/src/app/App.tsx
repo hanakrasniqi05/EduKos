@@ -1,6 +1,5 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import InstitutionListing from "../pages/InstitutionListing";
 import HomePage from "../pages/HomePage";
 import NotFound from "../pages/NotFound";
 import Navbar from "../sections/NavBar";
@@ -15,8 +14,9 @@ import Apply from "../pages/Apply";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardRedirect from "../components/DashboardRedirect";
 import { ROLES } from "../lib/api";
-import Krahaso from "../pages/Krahaso"
+import Krahaso from "../pages/Krahaso";
 import WaitingApproval from "../pages/WaitingApproval";
+import InstitutionListing from "../pages/InstitutionListing";
 
 const App: React.FC = () => {
   return (
@@ -25,11 +25,14 @@ const App: React.FC = () => {
 
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/cerdhet" element={<InstitutionListing title="Çerdhet" description="Zbulo çerdhet në Kosovë." typeNames={["Cerdhe"]} />} />
-        <Route path="/shkollat-fillore" element={<InstitutionListing title="Shkollat Fillore" description="Krahaso shkollat fillore." typeNames={["Shkolla fillore"]} />} />
-        <Route path="/shkollat-e-mesme" element={<InstitutionListing title="Shkollat e Mesme" description="Eksploro shkollat e mesme." typeNames={["Shkolla e mesme"]} />} />
-        <Route path="/universitetet" element={<InstitutionListing title="Fakultetet" description="Zbulo fakultetet në Kosovë." typeNames={["Fakultete"]} />} />
-        <Route path="/institutions/:institutionId" element={<InstitutionDetails />} />
+        <Route
+          path="/explore/:typeId"
+          element={<InstitutionListing />}
+        />
+        <Route
+          path="/institutions/:institutionId"
+          element={<InstitutionDetails />}
+        />
         <Route path="/dashboard" element={<DashboardRedirect />} />
         <Route
           path="/dashboard/user"
@@ -75,8 +78,8 @@ const App: React.FC = () => {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/krahaso" element={<Krahaso />} />
-        <Route path="*" element={<NotFound />} />
         <Route path="/waiting-approval" element={<WaitingApproval />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
