@@ -8,10 +8,12 @@ using System.Text;
 using EduKos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using EduKos.API.Services.DataManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IDataManagementService, DataManagementService>();
 
 builder.Services.AddOpenApi();
 

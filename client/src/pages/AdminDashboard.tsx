@@ -23,21 +23,25 @@ import {
   updateApplicationStatus,
 } from "../lib/api";
 
+const DataManagementSection = React.lazy(() => import("../components/DataManagementSection"));
+
 type Section =
   | "overview"
   | "users"
   | "institutions"
   | "categories"
   | "reviews"
-  | "applications";
+  | "applications"
+  | "data";
 
 const sections: { id: Section; label: string }[] = [
   { id: "overview", label: "Pasqyra" },
   { id: "users", label: "Perdoruesit" },
   { id: "institutions", label: "Institucionet" },
   { id: "categories", label: "Kategorite" },
-  { id: "reviews", label: "Reviews" },
+  { id: "reviews", label: "Vleresimet" },
   { id: "applications", label: "Aplikimet" },
+  { id: "data", label: "Menaxhimi i te dhenave" },
 ];
 
 const statusLabel: Record<string, string> = {
@@ -109,7 +113,7 @@ export default function AdminDashboard() {
         if (!ignore) setData(dashboard);
       } catch (err) {
         if (!ignore) {
-          setError(err instanceof Error ? err.message : "Dashboard data could not be loaded.");
+          setError(err instanceof Error ? err.message : "Te dhenat e panelit nuk mund te ngarkohen.");
         }
       } finally {
         if (!ignore) setLoading(false);
@@ -130,7 +134,7 @@ export default function AdminDashboard() {
       { label: "Perdorues", value: data.users.length },
       { label: "Institucione", value: data.institutions.length },
       { label: "Kategori", value: data.institutionTypes.length },
-      { label: "Reviews", value: data.reviews.length },
+      { label: "Vleresime", value: data.reviews.length },
       { label: "Aplikime", value: data.applications.length },
       { label: "Ne pritje", value: pendingApps },
       { label: "Pa aprovuar", value: unapproved },
@@ -161,7 +165,7 @@ export default function AdminDashboard() {
     return (
       <main className="min-h-screen px-6 py-16">
         <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-8 text-red-700">
-          {error || "Dashboard data could not be loaded."}
+          {error || "Te dhenat e panelit nuk mund te ngarkohen."}
         </div>
       </main>
     );
@@ -224,7 +228,7 @@ export default function AdminDashboard() {
               <motion.div key="overview" variants={riseVariants} initial="hidden" animate="visible" exit="exit" className="space-y-6">
                 <header>
                   <h2 className="text-2xl font-bold">Paneli i Adminit</h2>
-                  <p className="text-gray-600">Menaxho perdoruesit, institucionet, kategorite, reviews dhe aplikimet.</p>
+                  <p className="text-gray-600">Menaxho perdoruesit, institucionet, kategorite, vleresimet dhe aplikimet.</p>
                 </header>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {stats.map((stat) => (
@@ -282,7 +286,7 @@ export default function AdminDashboard() {
 
             {activeSection === "reviews" && (
               <motion.div key="reviews" variants={riseVariants} initial="hidden" animate="visible" exit="exit">
-                <Panel title="Reviews">
+                <Panel title="Vleresimet">
                   <ReviewsTable
                     reviews={data.reviews}
                     institutions={data.institutions}
@@ -304,6 +308,22 @@ export default function AdminDashboard() {
                     }
                   />
                 </Panel>
+              </motion.div>
+            )}
+
+            {activeSection === "data" && (
+              <motion.div key="data" variants={riseVariants} initial="hidden" animate="visible" exit="exit">
+                <React.Suspense
+                  fallback={
+                    <div className="rounded-xl border border-emerald/20 bg-white p-5 shadow-sm">
+                      Duke ngarkuar menaxhimin e te dhenave...
+                    </div>
+                  }
+                >
+                  <DataManagementSection
+                    onImported={() => reload()}
+                  />
+                </React.Suspense>
               </motion.div>
             )}
           </AnimatePresence>
@@ -631,7 +651,7 @@ function InstitutionsSection({
                         }
                       }}
                     >
-                      View more
+                      Shiko me shume
                     </button>
                   </div>
                 </td>
@@ -653,32 +673,32 @@ function InstitutionsSection({
                   setFullDetails(null);
                 }}
               >
-                Close
+                Mbyll
               </button>
             </div>
 
             <div className="space-y-2 text-sm">
-              <p><b>City:</b> {selectedInstitution.city || "—"}</p>
-              <p><b>Address:</b> {(selectedInstitution as any).address || "—"}</p>
+              <p><b>Qyteti:</b> {selectedInstitution.city || "—"}</p>
+              <p><b>Adresa:</b> {(selectedInstitution as any).address || "—"}</p>
               <p><b>Email:</b> {(selectedInstitution as any).email || "—"}</p>
-              <p><b>Phone:</b> {(selectedInstitution as any).phone || "—"}</p>
-              <p><b>Description:</b> {selectedInstitution.description || "—"}</p>
+              <p><b>Telefoni:</b> {(selectedInstitution as any).phone || "—"}</p>
+              <p><b>Pershkrimi:</b> {selectedInstitution.description || "—"}</p>
             </div>
 
             <div className="mt-6 border-t pt-4">
-              <h3 className="font-semibold">Details</h3>
+              <h3 className="font-semibold">Detajet</h3>
               
               {loadingDetails ? (
-                <p className="text-gray-500">Loading...</p>
+                <p className="text-gray-500">Duke u ngarkuar...</p>
               ) : fullDetails ? (
                 <div className="text-sm space-y-1 mt-2">
-                  <p>Programs: {fullDetails.programs?.length ?? 0}</p>
-                  <p>Staff: {fullDetails.staff?.length ?? 0}</p>
-                  <p>Facilities: {fullDetails.facilities?.length ?? 0}</p>
-                  <p>Reviews: {fullDetails.reviews?.length ?? 0}</p>
+                  <p>Programet: {fullDetails.programs?.length ?? 0}</p>
+                  <p>Stafi: {fullDetails.staff?.length ?? 0}</p>
+                  <p>Objektet: {fullDetails.facilities?.length ?? 0}</p>
+                  <p>Vleresimet: {fullDetails.reviews?.length ?? 0}</p>
                 </div>
               ) : (
-                <p className="text-gray-500 mt-1">No details found</p>
+                <p className="text-gray-500 mt-1">Nuk u gjeten detaje</p>
               )}
             </div>
           </div>
@@ -755,7 +775,7 @@ function ReviewsTable({
     institutions.find((i) => i.institutionId === id)?.name ?? `#${id}`;
 
   if (!reviews.length) {
-    return <p className="text-gray-500">Nuk ka reviews.</p>;
+    return <p className="text-gray-500">Nuk ka vleresime.</p>;
   }
 
   return (
@@ -780,7 +800,7 @@ function ReviewsTable({
               </td>
               <td className="py-2 pr-4 max-w-xs truncate">{review.comment || "—"}</td>
               <td className="py-2">
-                <button type="button" className={btnDanger} onClick={() => { if (confirm("Fshi review?")) onDelete(review.reviewId); }}>Fshi</button>
+                <button type="button" className={btnDanger} onClick={() => { if (confirm("Fshi vleresimin?")) onDelete(review.reviewId); }}>Fshi</button>
               </td>
             </tr>
           ))}

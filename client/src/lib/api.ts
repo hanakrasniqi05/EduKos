@@ -855,3 +855,91 @@ export async function searchInstitutions(params: SearchInstitutionsParams): Prom
 export async function getHomeStats(): Promise<HomeStatsDto> {
   return request<HomeStatsDto>("/home/stats");
 }
+
+export type DataManagementEntity =
+  | "users"
+  | "institutions"
+  | "applications"
+  | "programs"
+  | "staff-facilities";
+
+export type DataManagementFormat = "csv" | "excel" | "json";
+
+export type ImportResultDto = {
+  created: number;
+  updated: number;
+  skipped: number;
+};
+
+export async function exportData(
+  entity: DataManagementEntity,
+  format: DataManagementFormat,
+) {
+  const auth = getStoredAuth();
+  const response = await fetch(
+    `${API_BASE_URL}/data-management/export/${entity}?format=${format}`,
+    {
+      headers: auth?.accessToken
+        ? { Authorization: `Bearer ${auth.accessToken}` }
+        : undefined,
+    },
+  );
+
+  if (!response.ok) {
+    let message = "Eksporti deshtoi";
+    try {
+      const body = await response.json();
+      message = body.message ?? message;
+    } catch {
+      message = response.statusText || message;
+    }
+    throw new Error(message);
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition");
+  const fallbackName = `${entity}.${format === "excel" ? "xlsx" : format}`;
+  const fileName =
+    disposition?.match(/filename\*=UTF-8''([^;]+)/)?.[1] ??
+    disposition?.match(/filename="?([^"]+)"?/)?.[1] ??
+    fallbackName;
+
+  return {
+    blob,
+    fileName: decodeURIComponent(fileName),
+  };
+}
+
+export async function importData(
+  entity: DataManagementEntity,
+  format: DataManagementFormat,
+  file: File,
+) {
+  const auth = getStoredAuth();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(
+    `${API_BASE_URL}/data-management/import/${entity}?format=${format}`,
+    {
+      method: "POST",
+      headers: auth?.accessToken
+        ? { Authorization: `Bearer ${auth.accessToken}` }
+        : undefined,
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    let message = "Importi deshtoi";
+    try {
+      const body = await response.json();
+      message = body.message ?? message;
+    } catch {
+      message = response.statusText || message;
+    }
+    throw new Error(message);
+  }
+
+  return response.json() as Promise<ImportResultDto>;
+}
