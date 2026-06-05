@@ -59,17 +59,14 @@ public class UsersController(AppDbContext context, PasswordHasher<User> password
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UserDto dto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request, CancellationToken cancellationToken)
     {
         var user = await context.Users.FindAsync([id], cancellationToken);
         if (user == null)
             return NotFound();
 
-        user.Email = dto.Email;
-        user.FirstName = dto.FirstName;
-        user.LastName = dto.LastName;
-        user.PhoneNumber = dto.PhoneNumber;
-        user.IsActive = dto.IsActive;
+        user.IsActive = request.IsActive;
+        
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
@@ -81,9 +78,30 @@ public class UsersController(AppDbContext context, PasswordHasher<User> password
         if (user == null)
             return NotFound();
 
+        var currentAdminId = GetCurrentUserId();
+        if (user.UserId == currentAdminId)
+            return BadRequest(new { message = "Nuk mund të fshini llogarinë tuaj." });
+
+        var hasApplications = await context.Applications.AnyAsync(a => a.UserId == id, cancellationToken);
+        var hasReviews = await context.Reviews.AnyAsync(r => r.UserId == id, cancellationToken);
+        var hasSavedInstitutions = await context.SavedInstitutions.AnyAsync(s => s.UserId == id, cancellationToken);
+        
+        if (hasApplications || hasReviews || hasSavedInstitutions)
+        {
+            user.IsActive = false;
+            await context.SaveChangesAsync(cancellationToken);
+            return Ok(new { message = "Përdoruesi u çaktivizua sepse ka të dhëna të lidhura." });
+        }
+
         context.Users.Remove(user);
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst("userId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        return userIdClaim != null && int.TryParse(userIdClaim.Value, out var id) ? id : 0;
     }
 
     private static UserDto ToDto(User user) => new()
@@ -102,4 +120,9 @@ public class UsersController(AppDbContext context, PasswordHasher<User> password
 public class UserCreateRequest : UserDto
 {
     public string Password { get; set; } = default!;
+}
+
+public class UserUpdateRequest
+{
+    public bool IsActive { get; set; }
 }

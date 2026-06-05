@@ -21,6 +21,7 @@ import {
   updateUser,
   getInstitutionFullDetails,
   updateApplicationStatus,
+  getStoredAuth,
 } from "../lib/api";
 
 const DataManagementSection = React.lazy(() => import("../components/DataManagementSection"));
@@ -356,7 +357,12 @@ function UsersSection({
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "", isActive: true });
+  const [editForm, setEditForm] = useState({ isActive: true });
+
+  const currentUserEmail = useMemo(() => {
+    const auth = getStoredAuth();
+    return auth?.email;
+  }, []);
 
   return (
     <Panel title="Perdoruesit">
@@ -399,64 +405,100 @@ function UsersSection({
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.userId} className="border-b border-gray-50">
-                {editingId === user.userId ? (
-                  <>
-                    <td className="py-2 pr-4">
-                      <input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className={inputClass} />
-                    </td>
-                    <td className="py-2 pr-4">
-                      <input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className={inputClass} />
-                    </td>
-                    <td className="py-2 pr-4 text-gray-500">{user.roles?.join(", ") || "—"}</td>
-                    <td className="py-2 pr-4">
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} />
-                        Aktiv
-                      </label>
-                    </td>
-                    <td className="py-2">
-                      <div className="flex gap-2">
-                        <button type="button" className={btnPrimary} onClick={() => onUpdate(user.userId, { ...user, ...editForm }).then(() => setEditingId(null))}>Ruaj</button>
-                        <button type="button" className={btnSecondary} onClick={() => setEditingId(null)}>Anulo</button>
-                      </div>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="py-2 pr-4">{user.firstName} {user.lastName}</td>
-                    <td className="py-2 pr-4">{user.email}</td>
-                    <td className="py-2 pr-4 text-gray-500">{user.roles?.join(", ") || "—"}</td>
-                    <td className="py-2 pr-4">
-                      <span className={user.isActive ? "text-emerald-700" : "text-red-600"}>
-                        {user.isActive ? "Aktiv" : "Jo aktiv"}
-                      </span>
-                    </td>
-                    <td className="py-2">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          className={btnSecondary}
-                          onClick={() => {
-                            setEditingId(user.userId);
-                            setEditForm({
-                              firstName: user.firstName ?? "",
-                              lastName: user.lastName ?? "",
-                              email: user.email,
-                              isActive: user.isActive,
-                            });
-                          }}
-                        >
-                          Ndrysho
-                        </button>
-                        <button type="button" className={btnDanger} onClick={() => { if (confirm("Fshi perdoruesin?")) onDelete(user.userId); }}>Fshi</button>
-                      </div>
-                    </td>
-                  </>
-                )}
-              </tr>
-            ))}
+            {users.map((user) => {
+              const isCurrentAdmin = user.email === currentUserEmail;
+              const isAdmin = user.roles?.includes("Admin");
+              
+              return (
+                <tr key={user.userId} className="border-b border-gray-50">
+                  {editingId === user.userId ? (
+                    <>
+                      <td className="py-2 pr-4 font-medium">{user.firstName} {user.lastName}</td>
+                      <td className="py-2 pr-4 text-gray-600">{user.email}</td>
+                      <td className="py-2 pr-4 text-gray-500">{user.roles?.join(", ") || "—"}</td>
+                      <td className="py-2 pr-4">
+                        <label className="flex items-center gap-2">
+                          <input 
+                            type="checkbox" 
+                            checked={editForm.isActive} 
+                            onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} 
+                            disabled={isCurrentAdmin}
+                          />
+                          Aktiv
+                        </label>
+                      </td>
+                      <td className="py-2">
+                        <div className="flex gap-2">
+                          <button 
+                            type="button" 
+                            className={btnPrimary} 
+                            onClick={() => {
+                              onUpdate(user.userId, { 
+                                ...user, 
+                                isActive: editForm.isActive 
+                              }).then(() => setEditingId(null));
+                            }}
+                          >
+                            Ruaj
+                          </button>
+                          <button type="button" className={btnSecondary} onClick={() => setEditingId(null)}>Anulo</button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-2 pr-4 font-medium">{user.firstName} {user.lastName}</td>
+                      <td className="py-2 pr-4">{user.email}</td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                          {user.roles?.join(", ") || "—"}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className={user.isActive ? "text-emerald-700" : "text-red-600"}>
+                          {user.isActive ? "Aktiv" : "Jo aktiv"}
+                        </span>
+                      </td>
+                      <td className="py-2">
+                        <div className="flex gap-2">
+                          {!isAdmin && !isCurrentAdmin && (
+                            <button
+                              type="button"
+                              className={btnSecondary}
+                              onClick={() => {
+                                setEditingId(user.userId);
+                                setEditForm({
+                                  isActive: user.isActive,
+                                });
+                              }}
+                            >
+                              Ndrysho statusin
+                            </button>
+                          )}
+                          {(isAdmin || isCurrentAdmin) && (
+                            <span className="text-xs text-gray-400 italic">I mbrojtur</span>
+                          )}
+                          <button 
+                            type="button" 
+                            className={btnDanger} 
+                            onClick={() => { 
+                              if (isCurrentAdmin) {
+                                alert("Nuk mund të fshini vetveten!");
+                                return;
+                              }
+                              if (confirm("Fshi perdoruesin?")) onDelete(user.userId); 
+                            }}
+                            disabled={isCurrentAdmin}
+                          >
+                            Fshi
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
