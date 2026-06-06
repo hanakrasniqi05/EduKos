@@ -41,8 +41,8 @@ export default function ProfileTab() {
       });
 
       alert("Profile updated successfully");
-    } catch (err: any) {
-      alert(err.message || "Update failed");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Update failed");
     } finally {
       setSaving(false);
     }

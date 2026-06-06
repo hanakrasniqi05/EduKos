@@ -23,6 +23,8 @@ import {
   updateApplicationStatus,
   getStoredAuth,
 } from "../lib/api";
+import RealtimeNotificationBadge from "../components/rtc/RealtimeNotificationBadge";
+import ApplicationStatusLive from "../components/rtc/ApplicationStatusLive";
 
 const DataManagementSection = React.lazy(() => import("../components/DataManagementSection"));
 
@@ -44,18 +46,6 @@ const sections: { id: Section; label: string }[] = [
   { id: "applications", label: "Aplikimet" },
   { id: "data", label: "Menaxhimi i te dhenave" },
 ];
-
-const statusLabel: Record<string, string> = {
-  pending: "Ne shqyrtim",
-  approved: "Aprovuar",
-  rejected: "Refuzuar",
-};
-
-const statusClass: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  approved: "bg-emerald-100 text-emerald-700",
-  rejected: "bg-red-100 text-red-700",
-};
 
 const pageVariants: Variants = {
   hidden: { opacity: 0 },
@@ -218,6 +208,9 @@ export default function AdminDashboard() {
         </motion.aside>
 
         <section className="space-y-4">
+          <div className="flex justify-end">
+            <RealtimeNotificationBadge />
+          </div>
           {actionError && (
             <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
               {actionError}
@@ -506,6 +499,11 @@ function UsersSection({
   );
 }
 
+type InstitutionFormData = Pick<
+  InstitutionDto,
+  "institutionTypeId" | "name" | "city" | "description" | "isApproved"
+>;
+
 function InstitutionsSection({
   institutions,
   institutionTypes,
@@ -521,8 +519,8 @@ function InstitutionsSection({
 }: {
   institutions: InstitutionDto[];
   institutionTypes: InstitutionTypeDto[];
-  onCreate: (data: any) => Promise<void>;
-  onUpdate: (id: number, data: any) => Promise<void>;
+  onCreate: (data: InstitutionFormData) => Promise<void>;
+  onUpdate: (id: number, data: InstitutionFormData) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
   selectedInstitution: InstitutionDto | null;
   setSelectedInstitution: React.Dispatch<React.SetStateAction<InstitutionDto | null>>;
@@ -686,7 +684,7 @@ function InstitutionsSection({
                           const details = await getInstitutionFullDetails(inst.institutionId);
                           console.log("FULL DETAILS RESPONSE:", details);
                           setFullDetails(details);
-                        } catch(err) {
+                        } catch {
                           setFullDetails(null);
                         } finally {
                           setLoadingDetails(false);
@@ -721,9 +719,9 @@ function InstitutionsSection({
 
             <div className="space-y-2 text-sm">
               <p><b>Qyteti:</b> {selectedInstitution.city || "—"}</p>
-              <p><b>Adresa:</b> {(selectedInstitution as any).address || "—"}</p>
-              <p><b>Email:</b> {(selectedInstitution as any).email || "—"}</p>
-              <p><b>Telefoni:</b> {(selectedInstitution as any).phone || "—"}</p>
+              <p><b>Adresa:</b> {selectedInstitution.address || "—"}</p>
+              <p><b>Email:</b> {selectedInstitution.email || "—"}</p>
+              <p><b>Telefoni:</b> {selectedInstitution.phone || "—"}</p>
               <p><b>Pershkrimi:</b> {selectedInstitution.description || "—"}</p>
             </div>
 
@@ -906,9 +904,7 @@ function ApplicationsTable({
                 <td className="py-2 pr-4">{app.selectedProgram || app.educationLevel}</td>
                 <td className="py-2 pr-4 text-xs text-gray-400">{formatDate(app.createdAt)}</td>
                 <td className="py-2 pr-4">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[app.status] ?? statusClass.pending}`}>
-                    {statusLabel[app.status] ?? app.status}
-                  </span>
+                  <ApplicationStatusLive applicationId={app.applicationId} status={app.status} />
                 </td>
               </tr>
             ))}
@@ -945,9 +941,10 @@ function ApplicationsTable({
               <DetailItem label="Data e aplikimit" value={formatDate(selectedApplication.createdAt)} />
               <div>
                 <p className="mb-1 text-xs font-semibold uppercase text-gray-400">Statusi</p>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[selectedApplication.status] ?? statusClass.pending}`}>
-                  {statusLabel[selectedApplication.status] ?? selectedApplication.status}
-                </span>
+                <ApplicationStatusLive
+                  applicationId={selectedApplication.applicationId}
+                  status={selectedApplication.status}
+                />
               </div>
             </div>
 

@@ -7,6 +7,7 @@ import InstitutionStaff from "../components/InstitutionStaff";
 import InstitutionFacilities from "../components/InstitutionFacilities";
 import InstitutionAnnouncements from "../components/InstitutionAnnouncements";
 import ApplicationsTab from "../components/ApplicationsTab";
+import RealtimeNotificationBadge from "../components/rtc/RealtimeNotificationBadge";
 
 type Tab =
   | "overview"
@@ -44,6 +45,9 @@ export default function InstitutionDashboard() {
   return (
     <main className="min-h-screen px-6 py-10">
       <div className="mx-auto max-w-6xl space-y-6">
+        <div className="flex justify-end">
+          <RealtimeNotificationBadge />
+        </div>
         <InstitutionDashboardHeader activeTab={activeTab} setActiveTab={setActiveTab} />
         {renderTab()}
       </div>

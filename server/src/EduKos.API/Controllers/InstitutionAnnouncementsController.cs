@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EduKos.Domain.Entities;
 using EduKos.Application.DTOs.Education;
+using EduKos.API.Services.Rtc;
 using System.Security.Claims;
 
 namespace EduKos.API.Controllers;
@@ -11,7 +12,9 @@ namespace EduKos.API.Controllers;
 [ApiController]
 [Route("api/institution-announcements")]
 [Authorize(Roles = "Shkolla,Admin")]
-public class InstitutionAnnouncementsController(AppDbContext context) : ControllerBase
+public class InstitutionAnnouncementsController(
+    AppDbContext context,
+    IRtcAlertService rtcAlertService) : ControllerBase
 {
     private int GetUserId()
         => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
@@ -44,7 +47,9 @@ public class InstitutionAnnouncementsController(AppDbContext context) : Controll
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateAnnouncementRequestDto dto)
+    public async Task<IActionResult> Create(
+        CreateAnnouncementRequestDto dto,
+        CancellationToken cancellationToken)
     {
         var institutionId = await GetInstitutionId();
         if (institutionId == null) return NotFound();
@@ -57,7 +62,8 @@ public class InstitutionAnnouncementsController(AppDbContext context) : Controll
         };
 
         context.InstitutionAnnouncements.Add(entity);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
+        await rtcAlertService.PublishInstitutionAnnouncementAsync(entity, cancellationToken);
 
         return Ok(Map(entity));
     }

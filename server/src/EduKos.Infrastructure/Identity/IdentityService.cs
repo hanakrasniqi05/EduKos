@@ -149,9 +149,10 @@ public class IdentityService : IAuthService
         })
         .FirstOrDefaultAsync(cancellationToken);
 
+    var isInstitutionUser = roles.Contains(AppRoles.Shkolla);
     bool institutionExists = institution != null;
     bool institutionIsApproved = institution?.IsApproved ?? false;
-    bool institutionIsDeleted = !institutionExists;
+    bool institutionIsDeleted = isInstitutionUser && !institutionExists;
 
     var refreshTokenValue = await _tokenService.GenerateRefreshTokenAsync();
     var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenDays);

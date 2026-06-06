@@ -54,6 +54,11 @@ export type InstitutionDto = {
   institutionOwnership?: string;
 };
 
+export type InstitutionWritePayload = Omit<
+  InstitutionDto,
+  "institutionId" | "createdAt" | "institutionTypeName"
+>;
+
 export type InstitutionTypeDto = {
   institutionTypeId: number;
   name: string;
@@ -578,10 +583,7 @@ export async function getInstitutionFullDetails(
 }
 
 export async function createInstitution(
-  data: Omit<
-    InstitutionDto,
-    "institutionId" | "createdAt" | "institutionTypeName"
-  >,
+  data: InstitutionWritePayload,
 ) {
   return request<InstitutionDto>("/institutions", {
     method: "POST",
@@ -591,7 +593,7 @@ export async function createInstitution(
 
 export async function updateInstitution(
   id: number,
-  data: InstitutionDto,
+  data: InstitutionWritePayload,
 ) {
   return request<void>(`/institutions/${id}`, {
     method: "PUT",

@@ -55,8 +55,8 @@ export default function FacilitiesTab() {
       resetForm();
       setShowForm(false);
       load();
-    } catch (err: any) {
-      alert(err.message || "Error saving facility");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error saving facility");
     }
   }
 
@@ -66,7 +66,7 @@ export default function FacilitiesTab() {
     try {
       await deleteFacility(id);
       load();
-    } catch (err) {
+    } catch {
       alert("Delete failed");
     }
   }

@@ -18,6 +18,37 @@ The backend now includes:
 - Save and unsave institution endpoints.
 - Full institution details endpoint with details, programs, staff, facilities, reviews, and announcements.
 - Docker support for SQL Server and the API.
+- Contextual real-time communication with Socket.IO and SQL Server persistence.
+
+## RTC Communication
+
+RTC is available only on institution profiles, application views, the Admin Dashboard, and the Institution Dashboard. It does not add a global chat launcher or a chat page.
+
+SQL Server stores:
+
+- `Conversations`
+- `Messages`
+- `RealtimeNotifications`
+- `ApplicationStatusUpdates`
+
+Socket.IO only delivers live events. The .NET API validates permissions and persists data before an event is emitted.
+
+### RTC Architecture
+
+The real-time module is split by responsibility:
+
+- `client/src/models/rtc.ts` contains shared frontend RTC types.
+- `client/src/services/rtcApi.ts` contains RTC REST requests.
+- `client/src/services/rtcSocketService.ts` owns the Socket.IO client connection.
+- `client/src/hooks/useRtcConversationSession.ts` manages an open conversation.
+- `client/src/hooks/useRtcFeed.ts` manages notifications and live events.
+- `client/src/context/RtcContext.tsx` coordinates the hooks and popup UI.
+- `server/src/EduKos.API/Controllers/Rtc` contains thin REST controllers.
+- `server/src/EduKos.API/Services/Rtc` contains conversation, message, notification, permission, alert, and publishing services.
+- `server/src/sockets/handlers` contains Socket.IO event handlers.
+- `server/src/controllers/internalEventController.ts` receives persisted events from the .NET API.
+
+Frontend pages are loaded lazily by route so dashboards and institution pages do not increase the initial page bundle.
 
 ## Seeded Roles And Users
 
@@ -90,7 +121,28 @@ Scalar API reference is available at:
 http://localhost:5056/scalar/v1
 ```
 
-Start the frontend in a second terminal:
+Start Socket.IO in a second terminal:
+
+```powershell
+cd server
+npm install
+$env:RTC_PORT="5060"
+$env:CLIENT_ORIGIN="http://localhost:5173"
+$env:EDUKOS_API_URL="http://localhost:5056"
+$env:JWT_KEY="THIS_IS_A_VERY_SECURE_SECRET_KEY_123456789"
+$env:JWT_ISSUER="EduKos"
+$env:JWT_AUDIENCE="EduKosUsers"
+$env:RTC_INTERNAL_SECRET="EDUKOS_RTC_INTERNAL_SECRET_CHANGE_ME"
+npm run rtc:dev
+```
+
+RTC will be available at:
+
+```text
+http://localhost:5060/health
+```
+
+Start the frontend in a third terminal:
 
 ```powershell
 cd client
@@ -118,7 +170,7 @@ Requirements:
 
 - Docker Desktop
 
-Start SQL Server and the API:
+Start SQL Server, the API, and RTC:
 
 ```powershell
 docker compose up --build
@@ -130,11 +182,18 @@ The API will be available at:
 http://localhost:5088
 ```
 
+Socket.IO will be available at:
+
+```text
+http://localhost:5060
+```
+
 When using Docker for the API and local Vite for the frontend, start the frontend with:
 
 ```powershell
 cd client
 $env:VITE_API_BASE_URL="http://localhost:5088/api"
+$env:VITE_RTC_SOCKET_URL="http://localhost:5060"
 npm install
 npm run dev
 ```

@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { getDashboardPath } from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContextState";
 
 export default function DashboardRedirect() {
   const { auth, isLoading } = useAuth();

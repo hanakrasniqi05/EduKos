@@ -19,6 +19,10 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<InstitutionApplication> Applications => Set<InstitutionApplication>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<Message> Messages => Set<Message>();
+    public DbSet<RealtimeNotification> RealtimeNotifications => Set<RealtimeNotification>();
+    public DbSet<ApplicationStatusUpdate> ApplicationStatusUpdates => Set<ApplicationStatusUpdate>();
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<FileAsset> Files => Set<FileAsset>();
     public DbSet<InstitutionType> InstitutionTypes => Set<InstitutionType>();
@@ -38,6 +42,8 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
         builder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.UserId);

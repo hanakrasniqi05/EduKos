@@ -24,6 +24,7 @@ import {
   type InstitutionStaffDto,
   type ReviewDto,
 } from "../lib/api";
+import ContactButton from "../components/rtc/ContactButton";
 
 const formatMoney = (value?: number) => {
   if (value === undefined || value === null) return "Pa tarife";
@@ -78,21 +79,21 @@ const InstitutionDetails: React.FC = () => {
   const [details, setDetails] = useState<InstitutionFullDetailsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const parsedInstitutionId = Number(institutionId);
+  const hasValidInstitutionId =
+    Number.isFinite(parsedInstitutionId) && parsedInstitutionId > 0;
 
   useEffect(() => {
     let ignore = false;
-    const id = Number(institutionId);
+    if (!hasValidInstitutionId) return;
 
-    if (!Number.isFinite(id) || id <= 0) {
-      setError("Institucioni nuk u gjet.");
-      setLoading(false);
-      return;
-    }
+    queueMicrotask(() => {
+      if (ignore) return;
+      setLoading(true);
+      setError("");
+    });
 
-    setLoading(true);
-    setError("");
-
-    getInstitutionFullDetails(id)
+    getInstitutionFullDetails(parsedInstitutionId)
       .then((data) => {
         if (!ignore) setDetails(data);
       })
@@ -106,11 +107,11 @@ const InstitutionDetails: React.FC = () => {
     return () => {
       ignore = true;
     };
-  }, [institutionId]);
+  }, [hasValidInstitutionId, parsedInstitutionId]);
 
   const average = useMemo(() => averageRating(details?.reviews ?? []), [details]);
 
-  if (loading) {
+  if (loading && hasValidInstitutionId) {
     return (
       <main className="min-h-screen bg-[#f7fbf3] px-5 py-10 md:px-10">
         <div className="mx-auto max-w-7xl animate-pulse">
@@ -125,12 +126,16 @@ const InstitutionDetails: React.FC = () => {
     );
   }
 
-  if (error || !details) {
+  if (!hasValidInstitutionId || error || !details) {
     return (
       <main className="min-h-screen bg-[#f7fbf3] px-5 py-16 md:px-10">
         <div className="mx-auto max-w-3xl rounded-lg border border-red-100 bg-white p-8 text-center shadow-sm">
           <h1 className="text-2xl font-bold text-gray-950">Detajet nuk u gjeten</h1>
-          <p className="mt-3 text-gray-600">{error || "Institucioni nuk ekziston."}</p>
+          <p className="mt-3 text-gray-600">
+            {!hasValidInstitutionId
+              ? "Institucioni nuk u gjet."
+              : error || "Institucioni nuk ekziston."}
+          </p>
           <Link className="mt-6 inline-flex rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white" to="/">
             Kthehu ne fillim
           </Link>
@@ -169,6 +174,7 @@ const InstitutionDetails: React.FC = () => {
                 <GraduationCap size={18} />
                 Apliko tani
               </Link>
+              <ContactButton institutionId={institution.institutionId} />
               {website && (
                 <a
                   href={website}

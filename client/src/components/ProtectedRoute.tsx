@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { getDashboardPath } from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContextState";
 
 type Props = {
   children: React.ReactNode;

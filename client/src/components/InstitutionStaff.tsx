@@ -55,8 +55,8 @@ export default function StaffTab() {
       resetForm();
       setShowForm(false);
       load();
-    } catch (err: any) {
-      alert(err.message || "Error saving staff");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error saving staff");
     }
   }
 
@@ -66,7 +66,7 @@ export default function StaffTab() {
     try {
       await deleteStaff(id);
       load();
-    } catch (err) {
+    } catch {
       alert("Delete failed");
     }
   }

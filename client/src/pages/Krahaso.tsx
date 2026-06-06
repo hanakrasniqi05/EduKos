@@ -100,19 +100,20 @@ export default function Krahaso() {
       );
 
       setAiRecommendation(res.data);
-    } catch (error: any) {
-  console.error("Failed to get AI recommendation:", error);
+    } catch (error) {
+      console.error("Failed to get AI recommendation:", error);
+      const responseData = axios.isAxiosError(error)
+        ? error.response?.data
+        : undefined;
 
-  console.log("AI error response:", error.response?.data);
-
-  setAiError(
-    typeof error.response?.data === "string"
-      ? error.response.data
-      : error.response?.data?.error?.message ||
-        error.response?.data?.message ||
+      setAiError(
+        typeof responseData === "string"
+          ? responseData
+          : responseData?.error?.message ||
+        responseData?.message ||
         "Nuk u arrit të merret rekomandimi AI."
-  );
-}finally {
+      );
+    } finally {
       setAiLoading(false);
     }
   };

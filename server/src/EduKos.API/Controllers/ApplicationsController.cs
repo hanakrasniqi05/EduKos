@@ -5,13 +5,14 @@ using EduKos.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using EduKos.API.Services.Rtc;
 
 namespace EduKos.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ApplicationsController(AppDbContext context) : ControllerBase
+public class ApplicationsController(AppDbContext context, IRtcAlertService rtcAlertService) : ControllerBase
 {
     [HttpGet]
     [Authorize(Roles = "Admin,Shkolla")]
@@ -97,6 +98,8 @@ public class ApplicationsController(AppDbContext context) : ControllerBase
         application = await BaseQuery()
             .FirstAsync(x => x.ApplicationId == application.ApplicationId, cancellationToken);
 
+        await rtcAlertService.PublishNewApplicationAsync(application, cancellationToken);
+
         return CreatedAtAction(nameof(GetById), new { id = application.ApplicationId }, ToDto(application));
     }
 
@@ -114,8 +117,11 @@ public class ApplicationsController(AppDbContext context) : ControllerBase
         if (application == null)
             return NotFound();
 
-        application.Status = dto.Status;
-        await context.SaveChangesAsync(cancellationToken);
+        await rtcAlertService.UpdateApplicationStatusAsync(
+            application,
+            CurrentUserId(),
+            dto.Status,
+            cancellationToken);
 
         var updated = await BaseQuery().FirstAsync(x => x.ApplicationId == id, cancellationToken);
         return Ok(ToDto(updated));

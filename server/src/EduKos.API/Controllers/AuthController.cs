@@ -9,6 +9,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using EduKos.API.Services.Rtc;
 
 namespace EduKos.API.Controllers;
 
@@ -19,12 +20,18 @@ public class AuthController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IAuthService _authService;
     private readonly AppDbContext _context;
+    private readonly IRtcAlertService _rtcAlertService;
 
-    public AuthController(IMediator mediator, IAuthService authService, AppDbContext context)
+    public AuthController(
+        IMediator mediator,
+        IAuthService authService,
+        AppDbContext context,
+        IRtcAlertService rtcAlertService)
     {
         _mediator = mediator;
         _authService = authService;
         _context = context;
+        _rtcAlertService = rtcAlertService;
     }
 
     [HttpPost("register")]
@@ -33,6 +40,11 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _mediator.Send(command);
+
+            await _rtcAlertService.PublishInstitutionRegistrationAsync(
+                result,
+                HttpContext.RequestAborted);
+
             return Ok(result);
         }
         catch (InvalidOperationException ex)

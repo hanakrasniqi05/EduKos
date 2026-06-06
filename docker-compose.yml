@@ -27,8 +27,29 @@ services:
       Jwt__Audience: "EduKosUsers"
       Jwt__AccessTokenMinutes: "60"
       Jwt__RefreshTokenDays: "7"
+      Rtc__BaseUrl: "http://rtc:5060/"
+      Rtc__InternalSecret: "EDUKOS_RTC_INTERNAL_SECRET_CHANGE_ME"
     ports:
       - "5088:8080"
+
+  rtc:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.rtc
+    container_name: edukos-rtc
+    depends_on:
+      - api
+    restart: on-failure
+    environment:
+      RTC_PORT: "5060"
+      CLIENT_ORIGIN: "http://localhost:5173"
+      EDUKOS_API_URL: "http://api:8080"
+      JWT_KEY: "THIS_IS_A_VERY_SECURE_SECRET_KEY_123456789"
+      JWT_ISSUER: "EduKos"
+      JWT_AUDIENCE: "EduKosUsers"
+      RTC_INTERNAL_SECRET: "EDUKOS_RTC_INTERNAL_SECRET_CHANGE_ME"
+    ports:
+      - "5060:5060"
 
 volumes:
   edukos-sql-data:

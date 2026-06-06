@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../assets/edukos-green.png";
 import { ROLES, type InstitutionTypeDto, getInstitutionTypes } from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContextState";
 
 type NavbarRole = "guest" | "student" | "institution" | "admin";
 

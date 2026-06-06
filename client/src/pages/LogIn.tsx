@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthLayout, { AuthField, authButtonClass, authInputClass } from "../components/AuthLayout";
 import { getDashboardPath } from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContextState";
 
 export default function Login() {
   const navigate = useNavigate();

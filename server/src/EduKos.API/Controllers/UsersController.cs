@@ -13,6 +13,13 @@ namespace EduKos.API.Controllers;
 [Authorize(Roles = "Admin")]
 public class UsersController(AppDbContext context, PasswordHasher<User> passwordHasher) : ControllerBase
 {
+    private static readonly HashSet<string> ProtectedSeedEmails = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "admin@edukos.com",
+        "nxenes@edukos.com",
+        "shkolla@edukos.com"
+    };
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetAll(CancellationToken cancellationToken)
     {
@@ -65,6 +72,9 @@ public class UsersController(AppDbContext context, PasswordHasher<User> password
         if (user == null)
             return NotFound();
 
+        if (ProtectedSeedEmails.Contains(user.Email) && !request.IsActive)
+            return BadRequest(new { message = "Llogarite baze te sistemit nuk mund te caktivizohen." });
+
         user.IsActive = request.IsActive;
         
         await context.SaveChangesAsync(cancellationToken);
@@ -81,6 +91,9 @@ public class UsersController(AppDbContext context, PasswordHasher<User> password
         var currentAdminId = GetCurrentUserId();
         if (user.UserId == currentAdminId)
             return BadRequest(new { message = "Nuk mund të fshini llogarinë tuaj." });
+
+        if (ProtectedSeedEmails.Contains(user.Email))
+            return BadRequest(new { message = "Llogarite baze te sistemit nuk mund te fshihen." });
 
         var hasApplications = await context.Applications.AnyAsync(a => a.UserId == id, cancellationToken);
         var hasReviews = await context.Reviews.AnyAsync(r => r.UserId == id, cancellationToken);

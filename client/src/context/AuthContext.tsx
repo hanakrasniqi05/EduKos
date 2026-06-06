@@ -1,7 +1,5 @@
 import React, {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useState,
 } from "react";
@@ -13,15 +11,7 @@ import {
   logout as apiLogout,
   restoreSession,
 } from "../lib/api";
-
-type AuthContextValue = {
-  auth: AuthResponse | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<AuthResponse>;
-  logout: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from "./authContextState";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthResponse | null>(() => getStoredAuth());
@@ -69,16 +59,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return context;
-}
-
-export function useOptionalAuth() {
-  return useContext(AuthContext);
 }

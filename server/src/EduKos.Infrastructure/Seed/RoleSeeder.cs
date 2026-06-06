@@ -59,6 +59,13 @@ public class RoleSeeder
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
         }
+        else
+        {
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            user.IsActive = true;
+            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, password);
+        }
 
         var role = await context.Roles.FirstAsync(x => x.Name == roleName);
         var hasRole = await context.UserRoles.AnyAsync(x => x.UserId == user.UserId && x.RoleId == role.RoleId);

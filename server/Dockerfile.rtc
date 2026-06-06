@@ -1,0 +1,30 @@
+FROM node:22-alpine AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY tsconfig.rtc.json ./
+COPY src/config/ src/config/
+COPY src/constants/ src/constants/
+COPY src/controllers/ src/controllers/
+COPY src/middleware/ src/middleware/
+COPY src/models/ src/models/
+COPY src/routes/ src/routes/
+COPY src/services/rtcService.ts src/services/rtcService.ts
+COPY src/sockets/ src/sockets/
+COPY src/types/ src/types/
+COPY src/utils/ src/utils/
+COPY src/rtcServer.ts src/rtcServer.ts
+RUN npm run rtc:build
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY --from=build /app/dist ./dist
+
+EXPOSE 5060
+CMD ["npm", "run", "rtc:start"]

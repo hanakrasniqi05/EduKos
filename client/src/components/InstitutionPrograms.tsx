@@ -75,8 +75,8 @@ export default function ProgramsTab() {
       resetForm();
       setShowForm(false);
       load();
-    } catch (err: any) {
-      alert(err.message || "Error saving program");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error saving program");
     }
   }
 
@@ -86,7 +86,7 @@ export default function ProgramsTab() {
     try {
       await deleteProgram(id);
       load();
-    } catch (err) {
+    } catch {
       alert("Delete failed");
     }
   }

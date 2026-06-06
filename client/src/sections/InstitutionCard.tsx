@@ -5,7 +5,7 @@ import {
   saveInstitution,
   unsaveInstitution,
 } from "../lib/api";
-import { useOptionalAuth } from "../context/AuthContext";
+import { useOptionalAuth } from "../context/authContextState";
 
 type Props = {
   institution: InstitutionDto;

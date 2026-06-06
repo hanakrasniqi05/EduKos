@@ -9,11 +9,23 @@ using EduKos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using EduKos.API.Services.DataManagement;
+using EduKos.API.Services.Rtc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IDataManagementService, DataManagementService>();
+builder.Services.AddScoped<IRtcConversationAccessPolicy, RtcConversationAccessPolicy>();
+builder.Services.AddScoped<IRtcConversationService, RtcConversationService>();
+builder.Services.AddScoped<IRtcMessageService, RtcMessageService>();
+builder.Services.AddScoped<IRtcNotificationService, RtcNotificationService>();
+builder.Services.AddScoped<IRtcAlertService, RtcAlertService>();
+builder.Services.AddScoped<RtcExceptionFilter>();
+builder.Services.AddHttpClient<IRtcEventPublisher, RtcEventPublisher>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Rtc:BaseUrl"] ?? "http://localhost:5060/");
+    client.Timeout = TimeSpan.FromSeconds(2);
+});
 
 builder.Services.AddOpenApi();
 

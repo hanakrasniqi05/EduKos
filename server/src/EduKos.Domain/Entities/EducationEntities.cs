@@ -106,6 +106,7 @@ public class InstitutionApplication
     public Institution Institution { get; set; } = default!;
     public User? User { get; set; }
     public FileAsset? DocumentFile { get; set; }
+    public ICollection<ApplicationStatusUpdate> StatusUpdates { get; set; } = new List<ApplicationStatusUpdate>();
 }
 
 public class Setting

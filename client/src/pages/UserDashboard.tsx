@@ -6,9 +6,13 @@ import {
   type ApplicationDto,
   type InstitutionDto,
   getDashboardData,
+  getMyNotifications,
   unsaveInstitution,
   updateCurrentUser,
 } from "../lib/api";
+import ApplicationStatusLive from "../components/rtc/ApplicationStatusLive";
+import RealtimeNotificationBadge from "../components/rtc/RealtimeNotificationBadge";
+import { useRtc } from "../context/rtcContextState";
 
 type Section = "overview" | "saved" | "applications" | "notifications" | "profile";
 
@@ -19,18 +23,6 @@ const sections: { id: Section; label: string }[] = [
   { id: "notifications", label: "Njoftimet" },
   { id: "profile", label: "Profili" },
 ];
-
-const statusLabel: Record<string, string> = {
-  pending: "Ne shqyrtim",
-  approved: "Aprovuar",
-  rejected: "Refuzuar",
-};
-
-const statusClass: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700 border-amber-200",
-  approved: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  rejected: "bg-red-100 text-red-700 border-red-200",
-};
 
 const pageVariants: Variants = {
   hidden: { opacity: 0 },
@@ -63,6 +55,7 @@ const listVariants: Variants = {
 };
 
 export default function UserDashboard() {
+  const { notifications: realtimeNotifications } = useRtc();
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,6 +67,12 @@ export default function UserDashboard() {
     lastName: "",
     phoneNumber: "",
   });
+  const latestAnnouncementNotificationId = useMemo(
+    () => realtimeNotifications.find(
+      (notification) => notification.type === "institution_announcement",
+    )?.realtimeNotificationId,
+    [realtimeNotifications],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -103,6 +102,23 @@ export default function UserDashboard() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!latestAnnouncementNotificationId) return;
+
+    let ignore = false;
+    getMyNotifications()
+      .then((notifications) => {
+        if (!ignore) {
+          setData((current) => current ? { ...current, notifications } : current);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      ignore = true;
+    };
+  }, [latestAnnouncementNotificationId]);
 
   const stats = useMemo(() => {
     const saved = data?.savedInstitutions.length ?? 0;
@@ -251,6 +267,9 @@ export default function UserDashboard() {
         </motion.aside>
 
         <section className="space-y-6">
+          <div className="flex justify-end">
+            <RealtimeNotificationBadge />
+          </div>
           <AnimatePresence mode="wait">
             {activeSection === "overview" && (
             <motion.div key="overview" className="space-y-6" variants={riseVariants} initial="hidden" animate="visible" exit="exit">
@@ -502,9 +521,7 @@ function ApplicationRow({ application, onOpen }: { application: ApplicationDto; 
           <p className="text-sm text-gray-500">{application.selectedProgram || application.educationLevel}</p>
           {application.message && <p className="mt-2 max-w-2xl text-sm text-gray-600">{application.message}</p>}
         </div>
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusClass[application.status] ?? statusClass.pending}`}>
-          {statusLabel[application.status] ?? application.status}
-        </span>
+        <ApplicationStatusLive applicationId={application.applicationId} status={application.status} />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <p className="text-xs text-gray-400">{formatDate(application.createdAt)}</p>
@@ -565,9 +582,7 @@ function ApplicationDetailsModal({ application, onClose }: { application: Applic
         </div>
 
         <div className="mt-5">
-          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClass[application.status] ?? statusClass.pending}`}>
-            {statusLabel[application.status] ?? application.status}
-          </span>
+          <ApplicationStatusLive applicationId={application.applicationId} status={application.status} />
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">

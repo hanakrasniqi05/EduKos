@@ -22,6 +22,39 @@ namespace EduKos.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("EduKos.Domain.Entities.ApplicationStatusUpdate", b =>
+                {
+                    b.Property<int>("ApplicationStatusUpdateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationStatusUpdateId"));
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChangedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("ApplicationStatusUpdateId");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("ApplicationId", "CreatedAt");
+
+                    b.ToTable("ApplicationStatusUpdates");
+                });
+
             modelBuilder.Entity("EduKos.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<int>("AuditLogId")
@@ -55,6 +88,63 @@ namespace EduKos.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AuditLogs");
+                });
+
+            modelBuilder.Entity("EduKos.Domain.Entities.Conversation", b =>
+                {
+                    b.Property<int>("ConversationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ConversationId"));
+
+                    b.Property<int?>("AdminUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("InstitutionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("StudentUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.HasKey("ConversationId");
+
+                    b.HasIndex("AdminUserId");
+
+                    b.HasIndex("InstitutionId");
+
+                    b.HasIndex("StudentUserId");
+
+                    b.HasIndex("UpdatedAt");
+
+                    b.HasIndex("Type", "InstitutionId", "AdminUserId")
+                        .IsUnique()
+                        .HasFilter("[Type] = 'institution_admin' AND [AdminUserId] IS NOT NULL");
+
+                    b.HasIndex("Type", "StudentUserId", "InstitutionId")
+                        .IsUnique()
+                        .HasFilter("[Type] = 'student_institution' AND [StudentUserId] IS NOT NULL");
+
+                    b.ToTable("Conversations");
                 });
 
             modelBuilder.Entity("EduKos.Domain.Entities.FileAsset", b =>
@@ -248,9 +338,9 @@ namespace EduKos.Infrastructure.Migrations
 
                     b.HasKey("ApplicationId");
 
-                    b.HasIndex("InstitutionId");
-
                     b.HasIndex("DocumentFileId");
+
+                    b.HasIndex("InstitutionId");
 
                     b.HasIndex("UserId");
 
@@ -482,6 +572,42 @@ namespace EduKos.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EduKos.Domain.Entities.Message", b =>
+                {
+                    b.Property<int>("MessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SenderUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("ConversationId", "CreatedAt");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("EduKos.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("NotificationId")
@@ -538,6 +664,52 @@ namespace EduKos.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Permissions");
+                });
+
+            modelBuilder.Entity("EduKos.Domain.Entities.RealtimeNotification", b =>
+                {
+                    b.Property<int>("RealtimeNotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RealtimeNotificationId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("RecipientUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("RealtimeNotificationId");
+
+                    b.HasIndex("RecipientUserId", "IsRead", "CreatedAt");
+
+                    b.ToTable("RealtimeNotifications");
                 });
 
             modelBuilder.Entity("EduKos.Domain.Entities.Recommendation", b =>
@@ -930,6 +1102,25 @@ namespace EduKos.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
+            modelBuilder.Entity("EduKos.Domain.Entities.ApplicationStatusUpdate", b =>
+                {
+                    b.HasOne("EduKos.Domain.Entities.InstitutionApplication", "Application")
+                        .WithMany("StatusUpdates")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduKos.Domain.Entities.User", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+
+                    b.Navigation("ChangedByUser");
+                });
+
             modelBuilder.Entity("EduKos.Domain.Entities.AuditLog", b =>
                 {
                     b.HasOne("EduKos.Domain.Entities.User", "User")
@@ -938,6 +1129,31 @@ namespace EduKos.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EduKos.Domain.Entities.Conversation", b =>
+                {
+                    b.HasOne("EduKos.Domain.Entities.User", "AdminUser")
+                        .WithMany()
+                        .HasForeignKey("AdminUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("EduKos.Domain.Entities.Institution", "Institution")
+                        .WithMany()
+                        .HasForeignKey("InstitutionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("EduKos.Domain.Entities.User", "StudentUser")
+                        .WithMany()
+                        .HasForeignKey("StudentUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("AdminUser");
+
+                    b.Navigation("Institution");
+
+                    b.Navigation("StudentUser");
                 });
 
             modelBuilder.Entity("EduKos.Domain.Entities.FileAsset", b =>
@@ -981,16 +1197,16 @@ namespace EduKos.Infrastructure.Migrations
 
             modelBuilder.Entity("EduKos.Domain.Entities.InstitutionApplication", b =>
                 {
+                    b.HasOne("EduKos.Domain.Entities.FileAsset", "DocumentFile")
+                        .WithMany()
+                        .HasForeignKey("DocumentFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("EduKos.Domain.Entities.Institution", "Institution")
                         .WithMany()
                         .HasForeignKey("InstitutionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EduKos.Domain.Entities.FileAsset", "DocumentFile")
-                        .WithMany()
-                        .HasForeignKey("DocumentFileId")
-                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("EduKos.Domain.Entities.User", "User")
                         .WithMany()
@@ -1066,6 +1282,25 @@ namespace EduKos.Infrastructure.Migrations
                     b.Navigation("PhotoFile");
                 });
 
+            modelBuilder.Entity("EduKos.Domain.Entities.Message", b =>
+                {
+                    b.HasOne("EduKos.Domain.Entities.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduKos.Domain.Entities.User", "SenderUser")
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("SenderUser");
+                });
+
             modelBuilder.Entity("EduKos.Domain.Entities.Notification", b =>
                 {
                     b.HasOne("EduKos.Domain.Entities.User", "User")
@@ -1075,6 +1310,17 @@ namespace EduKos.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EduKos.Domain.Entities.RealtimeNotification", b =>
+                {
+                    b.HasOne("EduKos.Domain.Entities.User", "RecipientUser")
+                        .WithMany()
+                        .HasForeignKey("RecipientUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RecipientUser");
                 });
 
             modelBuilder.Entity("EduKos.Domain.Entities.Recommendation", b =>
@@ -1223,6 +1469,11 @@ namespace EduKos.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EduKos.Domain.Entities.Conversation", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("EduKos.Domain.Entities.Institution", b =>
                 {
                     b.Navigation("Announcements");
@@ -1236,6 +1487,11 @@ namespace EduKos.Infrastructure.Migrations
                     b.Navigation("Reviews");
 
                     b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("EduKos.Domain.Entities.InstitutionApplication", b =>
+                {
+                    b.Navigation("StatusUpdates");
                 });
 
             modelBuilder.Entity("EduKos.Domain.Entities.InstitutionType", b =>

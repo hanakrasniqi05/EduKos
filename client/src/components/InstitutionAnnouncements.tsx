@@ -55,8 +55,8 @@ export default function AnnouncementsTab() {
       resetForm();
       setShowForm(false);
       load();
-    } catch (err: any) {
-      alert(err.message || "Error saving announcement");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error saving announcement");
     }
   }
 
@@ -66,7 +66,7 @@ export default function AnnouncementsTab() {
     try {
       await deleteAnnouncement(id);
       load();
-    } catch (err) {
+    } catch {
       alert("Delete failed");
     }
   }
