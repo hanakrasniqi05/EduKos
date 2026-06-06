@@ -16,5 +16,9 @@ public class AuthResponseDto
 
     public IList<string> Roles { get; set; } = new List<string>();
 
+    public bool InstitutionExists { get; set; }
+
     public bool? InstitutionIsApproved { get; set; }
+
+    public bool InstitutionIsDeleted { get; set; }
 }

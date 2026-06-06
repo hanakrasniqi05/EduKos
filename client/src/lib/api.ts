@@ -21,6 +21,7 @@ export type AuthResponse = {
   refreshTokenExpiresAt: string;
   roles: string[];
   institutionIsApproved?: boolean | null;
+  institutionIsDeleted: boolean;
 };
 
 export type UserDto = {

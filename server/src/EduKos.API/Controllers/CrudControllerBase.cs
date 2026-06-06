@@ -100,7 +100,7 @@ public abstract class CrudControllerBase<TEntity, TDto> : ControllerBase
             if (!targetProperties.TryGetValue(sourceProperty.Name, out var targetProperty))
                 continue;
 
-            if (targetProperty.PropertyType != sourceProperty.PropertyType)
+            if (!targetProperty.PropertyType.IsAssignableFrom(sourceProperty.PropertyType))
                 continue;
 
             targetProperty.SetValue(target, sourceProperty.GetValue(source));

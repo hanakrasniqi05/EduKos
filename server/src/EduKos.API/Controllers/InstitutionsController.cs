@@ -194,9 +194,13 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
         var entity = Map<InstitutionDto, Institution>(dto);
         entity.InstitutionId = 0;
 
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (int.TryParse(userIdClaim, out var userId))
+    {
+        entity.OwnerUserId = userId;
+    }
         await context.Institutions.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
-
         return CreatedAtAction(nameof(GetById), new { id = entity.InstitutionId }, ToDto(entity));
     }
 
@@ -209,7 +213,16 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
         if (entity == null)
             return NotFound();
 
-        CrudControllerBase<Institution, InstitutionDto>.Copy(dto, entity);
+        entity.InstitutionTypeId = dto.InstitutionTypeId;
+        entity.Name = dto.Name;
+        entity.Description = dto.Description;
+        entity.Location = dto.Location;
+        entity.City = dto.City;
+        entity.Address = dto.Address;
+        entity.Website = dto.Website;
+        entity.Email = dto.Email;
+        entity.Phone = dto.Phone;
+        entity.IsApproved = dto.IsApproved;
 
         await context.SaveChangesAsync(cancellationToken);
         return NoContent();

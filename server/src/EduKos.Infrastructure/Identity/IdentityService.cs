@@ -133,48 +133,54 @@ public class IdentityService : IAuthService
 
     private async Task<AuthResponseDto> BuildAuthResponseAsync(User user, CancellationToken cancellationToken)
     {
-        var roles = user.UserRoles.Select(x => x.Role.Name).ToList();
-
-        if (roles.Count == 0)
-        {
-            roles = await _context.UserRoles
-                .Where(x => x.UserId == user.UserId)
-                .Select(x => x.Role.Name)
-                .ToListAsync(cancellationToken);
-        }
-
-        bool? institutionIsApproved = null;
-
-        if (roles.Contains(AppRoles.Shkolla))
-        {
-            institutionIsApproved = await _context.Institutions
-                .Where(x => x.OwnerUserId == user.UserId)
-                .Select(x => x.IsApproved)
-                .FirstOrDefaultAsync(cancellationToken);
-        }
-
-        var refreshTokenValue = await _tokenService.GenerateRefreshTokenAsync();
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenDays);
-
-        _context.RefreshTokens.Add(new EduKos.Domain.Entities.RefreshToken
-        {
-            UserId = user.UserId,
-            Token = _tokenService.HashRefreshToken(refreshTokenValue),
-            ExpiresAt = refreshTokenExpiresAt
-        });
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return new AuthResponseDto
-        {
-            UserId = user.UserId.ToString(),
-            Email = user.Email,
-            AccessToken = await _tokenService.GenerateAccessTokenAsync(user.UserId.ToString(), user.Email, roles),
-            RefreshToken = refreshTokenValue,
-            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
-            RefreshTokenExpiresAt = refreshTokenExpiresAt,
-            Roles = roles,
-            InstitutionIsApproved = institutionIsApproved
-        };
+    var roles = user.UserRoles.Select(x => x.Role.Name).ToList();
+    if (roles.Count == 0)
+    {
+        roles = await _context.UserRoles
+            .Where(x => x.UserId == user.UserId)
+            .Select(x => x.Role.Name)
+            .ToListAsync(cancellationToken);
     }
+    var institution = await _context.Institutions
+        .Where(x => x.OwnerUserId == user.UserId)
+        .Select(x => new
+        {
+            x.IsApproved
+        })
+        .FirstOrDefaultAsync(cancellationToken);
+
+    bool institutionExists = institution != null;
+    bool institutionIsApproved = institution?.IsApproved ?? false;
+    bool institutionIsDeleted = !institutionExists;
+
+    var refreshTokenValue = await _tokenService.GenerateRefreshTokenAsync();
+    var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenDays);
+
+    _context.RefreshTokens.Add(new EduKos.Domain.Entities.RefreshToken
+    {
+        UserId = user.UserId,
+        Token = _tokenService.HashRefreshToken(refreshTokenValue),
+        ExpiresAt = refreshTokenExpiresAt
+    });
+
+    await _context.SaveChangesAsync(cancellationToken);
+
+    return new AuthResponseDto
+    {
+        UserId = user.UserId.ToString(),
+        Email = user.Email,
+        AccessToken = await _tokenService.GenerateAccessTokenAsync(
+            user.UserId.ToString(),
+            user.Email,
+            roles
+        ),
+        RefreshToken = refreshTokenValue,
+        AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
+        RefreshTokenExpiresAt = refreshTokenExpiresAt,
+        Roles = roles,
+        InstitutionExists = institutionExists,
+        InstitutionIsApproved = institutionIsApproved,
+        InstitutionIsDeleted = institutionIsDeleted
+    };
+}
 }

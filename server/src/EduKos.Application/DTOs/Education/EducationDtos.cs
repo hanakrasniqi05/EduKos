@@ -40,6 +40,7 @@ public class InstitutionDto
     [EmailAddress, MaxLength(255)] public string? Email { get; set; }
     [MaxLength(50)] public string? Phone { get; set; }
     public bool IsApproved { get; set; }
+    public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? InstitutionTypeName { get; set; }
 }

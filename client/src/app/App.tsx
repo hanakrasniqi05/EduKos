@@ -17,6 +17,7 @@ import { ROLES } from "../lib/api";
 import Krahaso from "../pages/Krahaso";
 import WaitingApproval from "../pages/WaitingApproval";
 import InstitutionListing from "../pages/InstitutionListing";
+import AccountDeleted from "../pages/AccountDeleted";
 
 const App: React.FC = () => {
   return (
@@ -79,6 +80,7 @@ const App: React.FC = () => {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/krahaso" element={<Krahaso />} />
         <Route path="/waiting-approval" element={<WaitingApproval />} />
+        <Route path="/account-deleted" element={<AccountDeleted />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
