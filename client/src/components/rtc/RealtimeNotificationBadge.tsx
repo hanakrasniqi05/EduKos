@@ -68,7 +68,9 @@ export default function RealtimeNotificationBadge() {
                   }
                 }}
                 className={`block w-full border-b border-gray-100 px-4 py-3 text-left transition hover:bg-emerald-50 ${
-                  notification.isRead ? "bg-white" : "bg-emerald-50/60"
+                  notification.isRead
+                    ? "bg-white"
+                    : "animate-[pulse_0.8s_ease-out_1] bg-emerald-50/60"
                 }`}
               >
                 <p className="text-sm font-semibold text-gray-900">{notification.title}</p>

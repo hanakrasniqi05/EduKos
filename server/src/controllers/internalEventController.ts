@@ -22,7 +22,13 @@ export function publishInternalEvent(io: Server, request: Request, response: Res
     io.to(`user:${userId}`).emit(eventName, request.body.payload);
   }
 
-  response.status(202).json({ deliveredTo: recipientUserIds });
+  const connectedRecipients = recipientUserIds.filter(
+    (userId) => io.sockets.adapter.rooms.get(`user:${userId}`)?.size,
+  );
+  response.status(202).json({
+    deliveredTo: recipientUserIds,
+    connectedRecipients,
+  });
 }
 
 function parseRecipientUserIds(value: unknown) {

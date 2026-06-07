@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { RtcConversation } from "../models/rtc";
 import ConversationPopup from "../components/rtc/ConversationPopup";
+import RealtimeNotificationToast from "../components/rtc/RealtimeNotificationToast";
 import { useRtcConversationSession } from "../hooks/useRtcConversationSession";
 import { useRtcFeed } from "../hooks/useRtcFeed";
 import {
@@ -37,9 +38,12 @@ export function RtcProvider({ children }: { children: React.ReactNode }) {
     notifications,
     unreadCount,
     applicationStatuses,
+    connectionState,
+    liveNotification,
     markNotificationRead,
     upsertConversation,
     replaceConversations,
+    dismissLiveNotification,
   } = feed;
 
   useEffect(() => {
@@ -94,6 +98,7 @@ export function RtcProvider({ children }: { children: React.ReactNode }) {
     notifications,
     unreadCount,
     applicationStatuses,
+    connectionState,
     openingConversation,
     openInstitutionConversation,
     openAdminConversation,
@@ -101,6 +106,7 @@ export function RtcProvider({ children }: { children: React.ReactNode }) {
     markNotificationRead,
   }), [
     applicationStatuses,
+    connectionState,
     conversations,
     markNotificationRead,
     notifications,
@@ -122,9 +128,27 @@ export function RtcProvider({ children }: { children: React.ReactNode }) {
           loading={loadingMessages}
           minimized={minimized}
           error={error}
+          connectionState={connectionState}
           onSend={sendMessage}
           onToggleMinimize={toggleMinimized}
           onClose={closeConversation}
+        />
+      )}
+      {auth && liveNotification && (
+        <RealtimeNotificationToast
+          notification={liveNotification}
+          onDismiss={dismissLiveNotification}
+          onOpen={() => {
+            if (
+              liveNotification.entityId
+              && ["conversation_message", "institution_message"].includes(
+                liveNotification.type,
+              )
+            ) {
+              void openKnownConversation(liveNotification.entityId);
+            }
+            dismissLiveNotification();
+          }}
         />
       )}
     </RtcContext.Provider>

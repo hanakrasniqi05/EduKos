@@ -1,9 +1,12 @@
 import { io, type Socket } from "socket.io-client";
-import { getStoredAuth, restoreSession } from "../lib/api";
-import type { RtcMessage } from "../models/rtc";
+import {
+  getStoredAuth,
+  refreshStoredSession,
+} from "../lib/api";
 
 const RTC_SOCKET_URL =
   import.meta.env.VITE_RTC_SOCKET_URL ?? "http://localhost:5060";
+const CONNECTION_TIMEOUT_MS = 8000;
 const ACK_TIMEOUT_MS = 8000;
 
 type SocketAck<T = unknown> = {
@@ -14,13 +17,15 @@ type SocketAck<T = unknown> = {
 
 let socket: Socket | null = null;
 let socketToken: string | null = null;
+let refreshInFlight: Promise<boolean> | null = null;
 
 export function getRtcSocket() {
   const auth = getStoredAuth();
   if (!auth?.accessToken) return null;
 
   if (!socket) {
-    createSocket(auth.accessToken);
+    socket = createSocket(auth.accessToken);
+    socketToken = auth.accessToken;
   } else if (socketToken !== auth.accessToken) {
     socket.disconnect();
     socket.auth = { token: auth.accessToken };
@@ -37,51 +42,68 @@ export function connectRtcSocket() {
 }
 
 export function disconnectRtcSocket() {
+  socket?.removeAllListeners();
   socket?.disconnect();
   socket = null;
   socketToken = null;
 }
 
-export function joinRtcConversation(conversationId: number) {
-  return emitWithAck<void>("rtc:join_conversation", { conversationId });
-}
-
-export function sendRtcMessage(conversationId: number, body: string) {
-  return emitWithAck<RtcMessage>("rtc:send_message", { conversationId, body });
-}
-
-async function emitWithAck<T>(
-  eventName: string,
-  payload: object,
-  retry = true,
-): Promise<T> {
+export async function ensureRtcConnection() {
   let current = connectRtcSocket();
   if (!current) {
-    throw new Error("Duhet te kyçeni per ta perdorur komunikimin.");
+    throw new Error("Duhet te kyceni per ta perdorur komunikimin.");
   }
 
   try {
     await waitForConnection(current);
-  } catch (connectionError) {
-    if (!retry) throw connectionError;
+    return current;
+  } catch (error) {
+    if (!isAuthenticationError(error) || !(await refreshSocketSession())) {
+      throw normalizeConnectionError(error);
+    }
 
-    const refreshed = await restoreSession();
-    if (!refreshed) throw connectionError;
-
-    disconnectRtcSocket();
     current = connectRtcSocket();
-    if (!current) throw connectionError;
+    if (!current) throw normalizeConnectionError(error);
     await waitForConnection(current);
+    return current;
   }
-
-  return emitAcknowledged<T>(current, eventName, payload, retry);
 }
 
-function emitAcknowledged<T>(
+export async function joinRtcConversation(conversationId: number) {
+  const current = await ensureRtcConnection();
+  return emitWithAck<void>(
+    current,
+    "rtc:join_conversation",
+    { conversationId },
+  );
+}
+
+function createSocket(token: string) {
+  const current = io(RTC_SOCKET_URL, {
+    autoConnect: false,
+    auth: { token },
+    transports: ["websocket", "polling"],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 500,
+    reconnectionDelayMax: 5000,
+    timeout: CONNECTION_TIMEOUT_MS,
+  });
+
+  current.on("connect_error", (error) => {
+    if (!isAuthenticationError(error)) return;
+    void refreshSocketSession().then((refreshed) => {
+      if (refreshed && !current.connected) current.connect();
+    });
+  });
+
+  return current;
+}
+
+function emitWithAck<T>(
   current: Socket,
   eventName: string,
   payload: object,
-  retry: boolean,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     current.timeout(ACK_TIMEOUT_MS).emit(
@@ -89,12 +111,6 @@ function emitAcknowledged<T>(
       payload,
       (error: Error | null, response?: SocketAck<T>) => {
         if (error) {
-          if (retry) {
-            disconnectRtcSocket();
-            void emitWithAck<T>(eventName, payload, false).then(resolve, reject);
-            return;
-          }
-
           reject(new Error("Sherbimi RTC nuk po pergjigjet."));
           return;
         }
@@ -110,15 +126,6 @@ function emitAcknowledged<T>(
   });
 }
 
-function createSocket(token: string) {
-  socketToken = token;
-  socket = io(RTC_SOCKET_URL, {
-    autoConnect: false,
-    auth: { token },
-    transports: ["websocket", "polling"],
-  });
-}
-
 function waitForConnection(current: Socket) {
   if (current.connected) return Promise.resolve();
 
@@ -126,7 +133,7 @@ function waitForConnection(current: Socket) {
     const timeout = window.setTimeout(() => {
       cleanup();
       reject(new Error("Sherbimi RTC nuk po pergjigjet."));
-    }, ACK_TIMEOUT_MS);
+    }, CONNECTION_TIMEOUT_MS);
 
     const onConnect = () => {
       cleanup();
@@ -146,4 +153,36 @@ function waitForConnection(current: Socket) {
     current.once("connect_error", onConnectError);
     current.connect();
   });
+}
+
+function refreshSocketSession() {
+  if (!refreshInFlight) {
+    refreshInFlight = refreshStoredSession()
+      .then((auth) => {
+        if (!auth) return false;
+
+        if (!socket) {
+          socket = createSocket(auth.accessToken);
+        } else {
+          socket.auth = { token: auth.accessToken };
+        }
+        socketToken = auth.accessToken;
+        return true;
+      })
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+
+  return refreshInFlight;
+}
+
+function isAuthenticationError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /token|autentikim|authentication|jwt|unauthorized/i.test(message);
+}
+
+function normalizeConnectionError(error: unknown) {
+  if (error instanceof Error && error.message) return error;
+  return new Error("Sherbimi RTC nuk po pergjigjet.");
 }

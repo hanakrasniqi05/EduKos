@@ -74,14 +74,14 @@ public sealed class RtcConversationsController(
         [FromBody] SendRtcMessageRequest request,
         CancellationToken cancellationToken)
     {
-        var message = await messageService.SendMessageAsync(
+        var delivery = await messageService.SendMessageAsync(
             User.GetRequiredUserId(),
             User.GetRoles(),
             conversationId,
             request.Body,
             cancellationToken);
 
-        var dto = message.ToDto();
+        var dto = delivery.Message.ToDto();
         var recipients = await conversationService.GetParticipantUserIdsAsync(
             conversationId,
             cancellationToken);
@@ -90,6 +90,14 @@ public sealed class RtcConversationsController(
             recipients,
             dto,
             cancellationToken);
+        if (delivery.Notification != null)
+        {
+            await eventPublisher.PublishAsync(
+                RtcEventNames.NotificationCreated,
+                [delivery.Notification.RecipientUserId],
+                delivery.Notification.ToDto(),
+                cancellationToken);
+        }
 
         return Ok(dto);
     }

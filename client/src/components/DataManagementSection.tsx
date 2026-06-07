@@ -72,6 +72,8 @@ export default function DataManagementSection({ onImported }: Props) {
 
   async function handleImport(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
+
     if (!file) {
       setError("Zgjidh nje skedar per import.");
       return;
@@ -84,7 +86,7 @@ export default function DataManagementSection({ onImported }: Props) {
       const result = await importData(entity, format, file);
       setMessage(`Importi perfundoi: ${result.created} te krijuara, ${result.updated} te perditesuara, ${result.skipped} te anashkaluara.`);
       setFile(null);
-      event.currentTarget.reset();
+      formElement.reset();
       await onImported();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Importi deshtoi.");

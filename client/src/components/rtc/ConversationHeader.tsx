@@ -1,7 +1,9 @@
 import { Minus, X } from "lucide-react";
+import type { RtcConnectionState } from "../../models/rtc";
 
 type Props = {
   title: string;
+  connectionState: RtcConnectionState;
   minimized: boolean;
   onToggleMinimize: () => void;
   onClose: () => void;
@@ -9,6 +11,7 @@ type Props = {
 
 export default function ConversationHeader({
   title,
+  connectionState,
   minimized,
   onToggleMinimize,
   onClose,
@@ -17,7 +20,18 @@ export default function ConversationHeader({
     <header className="flex h-14 items-center justify-between bg-emerald-700 px-4 text-white">
       <div className="min-w-0">
         <p className="truncate text-sm font-bold">{title}</p>
-        <p className="text-xs text-emerald-100">Komunikim ne kohe reale</p>
+        <p className="flex items-center gap-1.5 text-xs text-emerald-100">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              connectionState === "connected"
+                ? "bg-lime-300"
+                : connectionState === "connecting"
+                  ? "animate-pulse bg-amber-300"
+                  : "bg-red-300"
+            }`}
+          />
+          {connectionLabel(connectionState)}
+        </p>
       </div>
       <div className="flex items-center gap-1">
         <button
@@ -41,4 +55,10 @@ export default function ConversationHeader({
       </div>
     </header>
   );
+}
+
+function connectionLabel(state: RtcConnectionState) {
+  if (state === "connected") return "Lidhur ne kohe reale";
+  if (state === "connecting") return "Duke u lidhur...";
+  return "Jashte linje - mesazhi ruhet";
 }

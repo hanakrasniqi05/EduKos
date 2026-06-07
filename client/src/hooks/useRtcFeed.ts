@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type {
   ApplicationStatusEvent,
+  RtcConnectionState,
   RtcConversation,
   RtcMessage,
   RtcNotification,
@@ -13,6 +14,8 @@ import {
 import {
   connectRtcSocket,
   disconnectRtcSocket,
+  getRtcSocket,
+  joinRtcConversation,
 } from "../services/rtcSocketService";
 
 type Options = {
@@ -29,6 +32,10 @@ export function useRtcFeed({
   const [conversations, setConversations] = useState<RtcConversation[]>([]);
   const [notifications, setNotifications] = useState<RtcNotification[]>([]);
   const [applicationStatuses, setApplicationStatuses] = useState<Record<number, ApplicationStatusEvent>>({});
+  const [connectionState, setConnectionState] =
+    useState<RtcConnectionState>("disconnected");
+  const [liveNotification, setLiveNotification] =
+    useState<RtcNotification | null>(null);
 
   const refresh = useCallback(async () => {
     if (!authenticated) return;
@@ -50,6 +57,8 @@ export function useRtcFeed({
         setConversations([]);
         setNotifications([]);
         setApplicationStatuses({});
+        setConnectionState("disconnected");
+        setLiveNotification(null);
       });
 
       return () => {
@@ -57,11 +66,20 @@ export function useRtcFeed({
       };
     }
 
-    const socket = connectRtcSocket();
+    const socket = getRtcSocket();
     if (!socket) return;
 
     queueMicrotask(() => void refresh().catch(() => undefined));
 
+    const onConnect = () => {
+      setConnectionState("connected");
+      void refresh().catch(() => undefined);
+      if (activeConversationId) {
+        void joinRtcConversation(activeConversationId).catch(() => undefined);
+      }
+    };
+    const onDisconnect = () => setConnectionState("disconnected");
+    const onConnectError = () => setConnectionState("error");
     const onMessage = (message: RtcMessage) => {
       if (message.conversationId === activeConversationId) {
         onActiveMessage(message);
@@ -79,18 +97,34 @@ export function useRtcFeed({
     const onNotificationRead = (notification: RtcNotification) => {
       setNotifications((current) => replaceNotification(current, notification));
     };
+    const onNotificationCreated = (notification: RtcNotification) => {
+      setNotifications((current) => upsertNotification(current, notification));
+      setLiveNotification(notification);
+    };
 
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
     socket.on("rtc:receive_message", onMessage);
     socket.on("rtc:application_status_updated", onStatus);
     socket.on("rtc:admin_alert", onAlert);
     socket.on("rtc:institution_alert", onAlert);
+    socket.on("rtc:notification_created", onNotificationCreated);
     socket.on("rtc:notification_read", onNotificationRead);
+    queueMicrotask(() =>
+      setConnectionState(socket.connected ? "connected" : "connecting"),
+    );
+    connectRtcSocket();
 
     return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("connect_error", onConnectError);
       socket.off("rtc:receive_message", onMessage);
       socket.off("rtc:application_status_updated", onStatus);
       socket.off("rtc:admin_alert", onAlert);
       socket.off("rtc:institution_alert", onAlert);
+      socket.off("rtc:notification_created", onNotificationCreated);
       socket.off("rtc:notification_read", onNotificationRead);
     };
   }, [activeConversationId, authenticated, onActiveMessage, refresh]);
@@ -111,11 +145,14 @@ export function useRtcFeed({
     conversations,
     notifications,
     applicationStatuses,
+    connectionState,
+    liveNotification,
     unreadCount: notifications.filter((item) => !item.isRead).length,
     refresh,
     markNotificationRead,
     upsertConversation,
     replaceConversations: setConversations,
+    dismissLiveNotification: () => setLiveNotification(null),
   };
 }
 
@@ -128,4 +165,17 @@ function replaceNotification(
       ? replacement
       : item,
   );
+}
+
+function upsertNotification(
+  notifications: RtcNotification[],
+  notification: RtcNotification,
+) {
+  return [
+    notification,
+    ...notifications.filter(
+      (item) =>
+        item.realtimeNotificationId !== notification.realtimeNotificationId,
+    ),
+  ];
 }

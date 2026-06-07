@@ -29,6 +29,10 @@ export function registerConversationHandlers(socket: AuthenticatedSocket) {
         await socket.join(`conversation:${conversationId}`);
         acknowledge?.({ ok: true });
       } catch (error) {
+        console.error(
+          `[RTC] join failed user=${socket.data.userId}`,
+          error,
+        );
         acknowledge?.({
           ok: false,
           message: errorMessage(error, "Nuk mund te hapet biseda."),
@@ -56,6 +60,10 @@ export function registerConversationHandlers(socket: AuthenticatedSocket) {
         );
         acknowledge?.({ ok: true, data: message });
       } catch (error) {
+        console.error(
+          `[RTC] send failed user=${socket.data.userId}`,
+          error,
+        );
         acknowledge?.({
           ok: false,
           message: errorMessage(error, "Mesazhi nuk u dergua."),

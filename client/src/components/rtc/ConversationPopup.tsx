@@ -1,7 +1,11 @@
 import ConversationHeader from "./ConversationHeader";
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
-import type { RtcConversation, RtcMessage } from "../../models/rtc";
+import type {
+  RtcConnectionState,
+  RtcConversation,
+  RtcMessage,
+} from "../../models/rtc";
 
 type Props = {
   conversation: RtcConversation;
@@ -10,6 +14,7 @@ type Props = {
   loading: boolean;
   minimized: boolean;
   error: string;
+  connectionState: RtcConnectionState;
   onSend: (body: string) => Promise<void>;
   onToggleMinimize: () => void;
   onClose: () => void;
@@ -22,6 +27,7 @@ export default function ConversationPopup({
   loading,
   minimized,
   error,
+  connectionState,
   onSend,
   onToggleMinimize,
   onClose,
@@ -34,6 +40,7 @@ export default function ConversationPopup({
     >
       <ConversationHeader
         title={conversation.type === "institution_admin" ? `${conversation.institutionName} - Administrata` : conversation.institutionName}
+        connectionState={connectionState}
         minimized={minimized}
         onToggleMinimize={onToggleMinimize}
         onClose={onClose}

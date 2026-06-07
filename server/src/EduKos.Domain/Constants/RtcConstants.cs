@@ -22,5 +22,6 @@ public static class RtcEventNames
     public const string ApplicationStatusUpdated = "rtc:application_status_updated";
     public const string AdminAlert = "rtc:admin_alert";
     public const string InstitutionAlert = "rtc:institution_alert";
+    public const string NotificationCreated = "rtc:notification_created";
     public const string NotificationRead = "rtc:notification_read";
 }

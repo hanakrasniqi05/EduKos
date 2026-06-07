@@ -10,10 +10,14 @@ public interface IRtcMessageService
         int conversationId,
         CancellationToken cancellationToken);
 
-    Task<Message> SendMessageAsync(
+    Task<RtcMessageDelivery> SendMessageAsync(
         int userId,
         IReadOnlyCollection<string> roles,
         int conversationId,
         string body,
         CancellationToken cancellationToken);
 }
+
+public sealed record RtcMessageDelivery(
+    Message Message,
+    RealtimeNotification? Notification);

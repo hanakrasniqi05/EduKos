@@ -16,7 +16,8 @@ public sealed class RtcConversationService(AppDbContext context) : IRtcConversat
 
         var institutionExists = await context.Institutions.AnyAsync(
             institution => institution.InstitutionId == institutionId
-                && institution.OwnerUserId != null,
+                && institution.OwnerUserId != null
+                && institution.OwnerUser!.IsActive,
             cancellationToken);
 
         if (!institutionExists)
@@ -80,7 +81,8 @@ public sealed class RtcConversationService(AppDbContext context) : IRtcConversat
         query = roles switch
         {
             _ when roles.Contains(AppRoles.Admin) =>
-                query.Where(item => item.Type == RtcConversationTypes.InstitutionAdmin),
+                query.Where(item => item.Type == RtcConversationTypes.InstitutionAdmin
+                    && item.AdminUserId == userId),
             _ when roles.Contains(AppRoles.Shkolla) =>
                 query.Where(item => item.Institution.OwnerUserId == userId),
             _ when roles.Contains(AppRoles.Nxenes) =>

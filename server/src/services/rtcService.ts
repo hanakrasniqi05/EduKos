@@ -12,10 +12,20 @@ async function apiRequest<T>(
   headers.set("Authorization", `Bearer ${token}`);
   headers.set("Content-Type", "application/json");
 
-  const response = await fetch(`${rtcConfig.apiBaseUrl}/api/rtc${path}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${rtcConfig.apiBaseUrl}/api/rtc${path}`, {
+      ...options,
+      headers,
+      signal: options.signal ?? AbortSignal.timeout(7000),
+    });
+  } catch (error) {
+    throw new Error(
+      error instanceof Error && error.name === "TimeoutError"
+        ? "API RTC nuk po pergjigjet."
+        : "Lidhja me API RTC deshtoi.",
+    );
+  }
 
   if (!response.ok) {
     let message = "Veprimi RTC deshtoi.";

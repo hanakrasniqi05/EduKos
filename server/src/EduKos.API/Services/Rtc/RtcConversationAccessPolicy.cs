@@ -39,5 +39,6 @@ public sealed class RtcConversationAccessPolicy(AppDbContext context) : IRtcConv
         || roles.Contains(AppRoles.Shkolla)
             && conversation.Institution.OwnerUserId == userId
         || roles.Contains(AppRoles.Admin)
-            && conversation.Type == RtcConversationTypes.InstitutionAdmin;
+            && conversation.Type == RtcConversationTypes.InstitutionAdmin
+            && conversation.AdminUserId == userId;
 }

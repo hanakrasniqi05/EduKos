@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type {
   ApplicationStatusEvent,
+  RtcConnectionState,
   RtcConversation,
   RtcNotification,
 } from "../models/rtc";
@@ -10,6 +11,7 @@ export type RtcContextValue = {
   notifications: RtcNotification[];
   unreadCount: number;
   applicationStatuses: Record<number, ApplicationStatusEvent>;
+  connectionState: RtcConnectionState;
   openingConversation: boolean;
   openInstitutionConversation: (institutionId: number) => Promise<void>;
   openAdminConversation: () => Promise<void>;

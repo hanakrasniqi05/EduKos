@@ -31,6 +31,13 @@ export function getConversationMessages(conversationId: number) {
   return rtcRequest<RtcMessage[]>(`/conversations/${conversationId}/messages`);
 }
 
+export function sendRtcMessage(conversationId: number, body: string) {
+  return rtcRequest<RtcMessage>(`/conversations/${conversationId}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ body }),
+  });
+}
+
 export function getRtcNotifications() {
   return rtcRequest<RtcNotification[]>("/notifications");
 }

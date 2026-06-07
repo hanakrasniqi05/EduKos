@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
 import type { RtcConversation, RtcMessage } from "../models/rtc";
-import { getConversationMessages } from "../services/rtcApi";
 import {
-  joinRtcConversation,
+  getConversationMessages,
   sendRtcMessage,
-} from "../services/rtcSocketService";
+} from "../services/rtcApi";
+import { joinRtcConversation } from "../services/rtcSocketService";
 
 export function useRtcConversationSession() {
   const [activeConversation, setActiveConversation] = useState<RtcConversation | null>(null);
@@ -30,7 +30,7 @@ export function useRtcConversationSession() {
     try {
       const loadedMessages = await getConversationMessages(conversation.conversationId);
       setMessages(loadedMessages);
-      await joinRtcConversation(conversation.conversationId);
+      void joinRtcConversation(conversation.conversationId).catch(() => undefined);
     } catch (requestError) {
       setError(errorMessage(requestError, "Biseda nuk mund te hapet."));
     } finally {

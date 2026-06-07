@@ -266,6 +266,23 @@ export async function restoreSession(): Promise<AuthResponse | null> {
   }
 }
 
+export async function refreshStoredSession(): Promise<AuthResponse | null> {
+  const auth = getStoredAuth();
+  if (!auth?.refreshToken) {
+    clearAuth();
+    return null;
+  }
+
+  try {
+    const refreshed = await refreshToken(auth.refreshToken);
+    storeAuth(refreshed);
+    return refreshed;
+  } catch {
+    clearAuth();
+    return null;
+  }
+}
+
 export type RegisterPayload = {
   email: string;
   password: string;

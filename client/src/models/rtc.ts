@@ -1,4 +1,9 @@
 export type RtcConversationType = "student_institution" | "institution_admin";
+export type RtcConnectionState =
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "error";
 
 export type RtcConversation = {
   conversationId: number;

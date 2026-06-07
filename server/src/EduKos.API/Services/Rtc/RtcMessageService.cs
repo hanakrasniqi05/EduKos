@@ -29,7 +29,7 @@ public sealed class RtcMessageService(
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Message> SendMessageAsync(
+    public async Task<RtcMessageDelivery> SendMessageAsync(
         int userId,
         IReadOnlyCollection<string> roles,
         int conversationId,
@@ -55,15 +55,20 @@ public sealed class RtcMessageService(
         conversation.UpdatedAt = DateTime.UtcNow;
         context.Messages.Add(message);
 
+        RealtimeNotification? notification = null;
         var recipientUserId = ResolveRecipient(conversation, userId);
         if (recipientUserId.HasValue)
-            context.RealtimeNotifications.Add(CreateMessageNotification(
+        {
+            notification = CreateMessageNotification(
                 conversation,
                 recipientUserId.Value,
-                normalizedBody));
+                userId,
+                normalizedBody);
+            context.RealtimeNotifications.Add(notification);
+        }
 
         await context.SaveChangesAsync(cancellationToken);
-        return message;
+        return new RtcMessageDelivery(message, notification);
     }
 
     private static string ValidateBody(string body)
@@ -78,6 +83,7 @@ public sealed class RtcMessageService(
     private static RealtimeNotification CreateMessageNotification(
         Conversation conversation,
         int recipientUserId,
+        int senderUserId,
         string body)
     {
         var isAdminConversation =
@@ -90,8 +96,12 @@ public sealed class RtcMessageService(
                 ? RtcNotificationTypes.InstitutionMessage
                 : RtcNotificationTypes.ConversationMessage,
             Title = isAdminConversation
-                ? "Mesazh i ri nga institucioni"
-                : "Mesazh i ri",
+                ? senderUserId == conversation.AdminUserId
+                    ? "Mesazh i ri nga administrata"
+                    : "Mesazh i ri nga institucioni"
+                : senderUserId == conversation.StudentUserId
+                    ? "Mesazh i ri nga nxenesi"
+                    : "Mesazh i ri nga institucioni",
             Message = Truncate(body, 200),
             EntityId = conversation.ConversationId
         };
