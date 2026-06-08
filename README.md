@@ -2,6 +2,11 @@
 
 EduKos is an education and institution discovery platform. The backend is built with .NET Web API, SQL Server, Entity Framework Core, JWT authentication, refresh tokens, role authorization, and a full database model for users, roles, institutions, reviews, saved institutions, recommendations, notifications, files, and settings.
 
+Full API reference:
+
+- [`docs/API.md`](docs/API.md)
+- Scalar UI while the API is running: `http://localhost:5056/scalar/v1`
+
 ## Backend Work Completed
 
 The backend now includes:
