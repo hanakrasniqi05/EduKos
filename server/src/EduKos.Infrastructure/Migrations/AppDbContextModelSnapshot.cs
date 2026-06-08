@@ -220,6 +220,11 @@ namespace EduKos.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("IsSeeded")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Location")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");

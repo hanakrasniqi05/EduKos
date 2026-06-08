@@ -169,6 +169,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.Phone).HasMaxLength(50);
             entity.Property(e => e.IsApproved).HasDefaultValue(false);
+            entity.Property(e => e.IsSeeded).HasDefaultValue(false);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
             entity.HasOne(e => e.InstitutionType).WithMany(e => e.Institutions).HasForeignKey(e => e.InstitutionTypeId);
             entity.HasOne(e => e.OwnerUser).WithMany().HasForeignKey(e => e.OwnerUserId).OnDelete(DeleteBehavior.SetNull);

@@ -243,9 +243,16 @@ public static class DemoDataSeeder
                     Email = item.Email,
                     Phone = item.Phone,
                     IsApproved = item.IsApproved,
+                    IsSeeded = true,
                 };
 
                 await context.Institutions.AddAsync(institution, cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                institution.IsSeeded = true;
+                institution.IsApproved = item.IsApproved;
                 await context.SaveChangesAsync(cancellationToken);
             }
 
@@ -352,6 +359,20 @@ public static class DemoDataSeeder
                 }
             }
         }
+
+        var roleSeederNames = new[]
+        {
+            "Shkolla Fillore Hasan Prishtina",
+            "Kolegji AAB",
+            "Gjimnazi Xhevdet Doda",
+        };
+
+        var roleSeededInstitutions = await context.Institutions
+            .Where(x => roleSeederNames.Contains(x.Name))
+            .ToListAsync(cancellationToken);
+
+        foreach (var roleSeededInstitution in roleSeededInstitutions)
+            roleSeededInstitution.IsSeeded = true;
 
         await context.SaveChangesAsync(cancellationToken);
     }

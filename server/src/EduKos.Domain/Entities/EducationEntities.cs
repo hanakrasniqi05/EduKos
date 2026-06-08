@@ -150,6 +150,7 @@ public class Institution
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public bool IsApproved { get; set; }
+    public bool IsSeeded { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public InstitutionType InstitutionType { get; set; } = default!;

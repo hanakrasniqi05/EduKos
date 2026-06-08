@@ -209,12 +209,17 @@ public class InstitutionsController(
     {
         var entity = Map<InstitutionDto, Institution>(dto);
         entity.InstitutionId = 0;
+        entity.IsSeeded = false;
 
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (int.TryParse(userIdClaim, out var userId))
     {
         entity.OwnerUserId = userId;
     }
+
+        if (!IsAdminUser())
+            entity.IsApproved = false;
+
         await context.Institutions.AddAsync(entity, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = entity.InstitutionId }, ToDto(entity));
@@ -269,7 +274,7 @@ public class InstitutionsController(
     private bool IsAdminUser() => User.IsInRole("Admin");
 
     private IQueryable<Institution> ApplyPublicVisibilityFilter(IQueryable<Institution> query) =>
-        IsAdminUser() ? query : query.Where(x => x.IsApproved);
+        IsAdminUser() ? query : query.Where(x => x.IsApproved || x.IsSeeded);
 
     private int? CurrentUserIdOrNull()
     {

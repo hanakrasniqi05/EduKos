@@ -101,7 +101,8 @@ public class RoleSeeder
                 Address = "Rr. Agim Ramadani, Prishtine",
                 Email = "info@hasanprishtina.edu",
                 Phone = "+383 38 123 456",
-                IsApproved = true
+                IsApproved = true,
+                IsSeeded = true
             },
             new Institution
             {
@@ -114,7 +115,8 @@ public class RoleSeeder
                 Website = "www.aab-edu.net",
                 Email = "info@aab-edu.net",
                 Phone = "+383 38 100 200",
-                IsApproved = true
+                IsApproved = true,
+                IsSeeded = true
             },
             new Institution
             {
@@ -125,7 +127,8 @@ public class RoleSeeder
                 City = "Prishtine",
                 Address = "Lakrishte, Prishtine",
                 Phone = "+383 38 789 012",
-                IsApproved = true
+                IsApproved = true,
+                IsSeeded = true
             });
 
         await context.SaveChangesAsync();

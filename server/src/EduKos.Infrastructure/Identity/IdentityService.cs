@@ -70,7 +70,8 @@ public class IdentityService : IAuthService
                 Website = request.Website?.Trim(),
                 Email = user.Email,
                 Phone = user.PhoneNumber,
-                IsApproved = false
+                IsApproved = false,
+                IsSeeded = false
             }, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
