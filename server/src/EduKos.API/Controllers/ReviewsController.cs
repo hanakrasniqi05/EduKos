@@ -16,6 +16,60 @@ public class ReviewsController(AppDbContext context) : CrudControllerBase<Review
     protected override int GetId(Review entity) => entity.ReviewId;
     protected override void SetId(Review entity, int id) => entity.ReviewId = id;
 
+    [HttpGet("institution/{institutionId:int}/mine")]
+    [Authorize(Roles = "Admin,Nxenes,Shkolla")]
+    public async Task<ActionResult<ReviewDto>> GetMyReviewForInstitution(
+        int institutionId,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        var review = await Context.Reviews
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId && x.InstitutionId == institutionId,
+                cancellationToken);
+
+        return review == null ? NotFound() : Ok(MapToDto(review));
+    }
+
+    [HttpPost("institution")]
+    [Authorize(Roles = "Admin,Nxenes,Shkolla")]
+    public async Task<ActionResult<ReviewDto>> RateInstitution(
+        [FromBody] CreateInstitutionReviewRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        var institutionExists = await Context.Institutions
+            .AnyAsync(x => x.InstitutionId == request.InstitutionId, cancellationToken);
+
+        if (!institutionExists)
+            return NotFound("Institution not found.");
+
+        var review = await Context.Reviews
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId && x.InstitutionId == request.InstitutionId,
+                cancellationToken);
+
+        if (review == null)
+        {
+            review = new Review
+            {
+                UserId = userId,
+                InstitutionId = request.InstitutionId,
+            };
+            await Context.Reviews.AddAsync(review, cancellationToken);
+        }
+
+        review.TeachingQualityRating = request.Rating;
+        review.FacilitiesRating = null;
+        review.DifficultyRating = null;
+        review.StaffRating = null;
+        review.Comment = string.IsNullOrWhiteSpace(request.Comment) ? null : request.Comment.Trim();
+
+        await Context.SaveChangesAsync(cancellationToken);
+        return Ok(MapToDto(review));
+    }
+
     [HttpPost]
     [Authorize(Roles = "Admin,Nxenes,Shkolla")]
     public override async Task<ActionResult<ReviewDto>> Create([FromBody] ReviewDto dto, CancellationToken cancellationToken)

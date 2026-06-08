@@ -1,4 +1,5 @@
 using EduKos.Application.DTOs.Education;
+using EduKos.Application.Services;
 using EduKos.Domain.Entities;
 using EduKos.Infrastructure.Persistence;
 using EduKos.API.Services.NoSql;
@@ -78,7 +79,7 @@ public class InstitutionsController(
         
         if (request.MinRating.HasValue)
         {
-            query = query.Where(x => x.Reviews.Average(r => 
+            query = query.Where(x => x.Reviews.Average(r =>
                 ((r.TeachingQualityRating ?? 0) + (r.FacilitiesRating ?? 0) + (r.DifficultyRating ?? 0) + (r.StaffRating ?? 0)) / 4.0
             ) >= request.MinRating.Value);
         }
@@ -286,6 +287,8 @@ public class InstitutionsController(
     {
         var dto = Map<Institution, InstitutionDto>(institution);
         dto.InstitutionTypeName = institution.InstitutionType?.Name;
+        dto.AverageRating = InstitutionRatingHelper.GetAverageRating(institution.Reviews);
+        dto.ReviewCount = InstitutionRatingHelper.GetReviewCount(institution.Reviews);
         return dto;
     }
 

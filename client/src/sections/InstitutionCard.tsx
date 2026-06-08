@@ -6,6 +6,7 @@ import {
   saveInstitution,
   unsaveInstitution,
 } from "../lib/api";
+import StarRating from "../components/StarRating";
 import { useOptionalAuth } from "../context/authContextState";
 
 type Props = {
@@ -93,6 +94,13 @@ const InstitutionCard: React.FC<Props> = ({
             <h3 className="text-xl font-bold text-gray-900 mt-1">
               {institution.name}
             </h3>
+            <div className="mt-2">
+              <StarRating
+                value={institution.averageRating}
+                count={institution.reviewCount}
+                size={14}
+              />
+            </div>
           </div>
         </div>
 

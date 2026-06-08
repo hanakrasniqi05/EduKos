@@ -52,6 +52,8 @@ export type InstitutionDto = {
   institutionTypeName?: string;
   language?: string;
   institutionOwnership?: string;
+  averageRating?: number | null;
+  reviewCount?: number;
 };
 
 export type InstitutionWritePayload = Omit<
@@ -668,6 +670,27 @@ export async function deleteInstitutionType(id: number) {
 
 export async function getReviews() {
   return request<ReviewDto[]>("/reviews");
+}
+
+export async function getMyInstitutionReview(
+  institutionId: number,
+): Promise<ReviewDto> {
+  return request<ReviewDto>(`/reviews/institution/${institutionId}/mine`);
+}
+
+export type CreateInstitutionReviewPayload = {
+  institutionId: number;
+  rating: number;
+  comment?: string;
+};
+
+export async function rateInstitution(
+  payload: CreateInstitutionReviewPayload,
+): Promise<ReviewDto> {
+  return request<ReviewDto>("/reviews/institution", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function deleteReview(id: number) {

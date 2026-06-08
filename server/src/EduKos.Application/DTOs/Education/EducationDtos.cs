@@ -43,6 +43,8 @@ public class InstitutionDto
     public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? InstitutionTypeName { get; set; }
+    public double? AverageRating { get; set; }
+    public int ReviewCount { get; set; }
 }
 
 public class InstitutionDetailDto
@@ -113,6 +115,13 @@ public class ReviewDto
     [Range(1, 5)] public int? StaffRating { get; set; }
     public string? Comment { get; set; }
     public DateTime CreatedAt { get; set; }
+}
+
+public class CreateInstitutionReviewRequestDto
+{
+    [Required] public int InstitutionId { get; set; }
+    [Required, Range(1, 5)] public int Rating { get; set; }
+    public string? Comment { get; set; }
 }
 
 public class SavedInstitutionDto

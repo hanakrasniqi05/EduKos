@@ -26,6 +26,8 @@ import {
   type ReviewDto,
 } from "../lib/api";
 import ContactButton from "../components/rtc/ContactButton";
+import InstitutionRatingForm from "../components/InstitutionRatingForm";
+import StarRating from "../components/StarRating";
 import { useOptionalAuth } from "../context/authContextState";
 
 const formatMoney = (value?: number) => {
@@ -112,7 +114,43 @@ const InstitutionDetails: React.FC = () => {
     };
   }, [hasValidInstitutionId, parsedInstitutionId]);
 
-  const average = useMemo(() => averageRating(details?.reviews ?? []), [details]);
+  const average = useMemo(() => {
+    if (details?.institution.averageRating != null) {
+      return details.institution.averageRating;
+    }
+
+    return averageRating(details?.reviews ?? []);
+  }, [details]);
+
+  const reviewCount = details?.institution.reviewCount ?? details?.reviews.length ?? 0;
+
+  function handleRated(review: ReviewDto) {
+    setDetails((current) => {
+      if (!current) return current;
+
+      const existingIndex = current.reviews.findIndex(
+        (item) => item.userId === review.userId,
+      );
+      const reviews =
+        existingIndex >= 0
+          ? current.reviews.map((item, index) =>
+              index === existingIndex ? review : item,
+            )
+          : [...current.reviews, review];
+
+      const nextAverage = averageRating(reviews);
+
+      return {
+        ...current,
+        reviews,
+        institution: {
+          ...current.institution,
+          averageRating: nextAverage,
+          reviewCount: reviews.length,
+        },
+      };
+    });
+  }
 
   if (loading && hasValidInstitutionId) {
     return (
@@ -170,6 +208,13 @@ const InstitutionDetails: React.FC = () => {
             <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 md:text-lg">
               {institution.description || "Ky institucion ende nuk ka shtuar pershkrim te detajuar."}
             </p>
+            <div className="mt-5">
+              <StarRating
+                value={average}
+                count={reviewCount}
+                size={20}
+              />
+            </div>
             <div className="mt-8 flex flex-wrap gap-3">
               {canApply && (
                 <Link
@@ -202,8 +247,12 @@ const InstitutionDetails: React.FC = () => {
               <ContactRow icon={<Mail size={18} />} label="Email" value={institution.email} />
               <ContactRow
                 icon={<Star size={18} />}
-                label="Vleresimi"
-                value={details.reviews.length ? `${average.toFixed(1)} nga 5 (${details.reviews.length})` : "Pa vleresime"}
+                label="Vleresimi mesatar"
+                value={
+                  reviewCount > 0
+                    ? `${average.toFixed(1)} nga 5 (${reviewCount} vleresime)`
+                    : "Pa vleresime"
+                }
               />
             </div>
           </aside>
@@ -260,6 +309,12 @@ const InstitutionDetails: React.FC = () => {
           </Section>
 
           <Section title="Vleresimet" icon={<Star size={20} />}>
+            <div className="mb-6">
+              <InstitutionRatingForm
+                institutionId={institution.institutionId}
+                onRated={handleRated}
+              />
+            </div>
             {details.reviews.length ? (
               <div className="grid gap-4">
                 {details.reviews.map((review) => (
