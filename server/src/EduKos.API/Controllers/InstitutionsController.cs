@@ -20,7 +20,8 @@ public class InstitutionsController(
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<InstitutionDto>>> GetAll(CancellationToken cancellationToken)
     {
-        var institutions = await BaseQuery().ToListAsync(cancellationToken);
+        var institutions = await ApplyPublicVisibilityFilter(BaseQuery())
+            .ToListAsync(cancellationToken);
         return Ok(institutions.Select(ToDto));
     }
 
@@ -28,7 +29,7 @@ public class InstitutionsController(
     [AllowAnonymous]
     public async Task<ActionResult<InstitutionDto>> GetById(int id, CancellationToken cancellationToken)
     {
-        var institution = await BaseQuery()
+        var institution = await ApplyPublicVisibilityFilter(BaseQuery())
             .FirstOrDefaultAsync(x => x.InstitutionId == id, cancellationToken);
 
         return institution == null ? NotFound() : Ok(ToDto(institution));
@@ -38,7 +39,7 @@ public class InstitutionsController(
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<InstitutionDto>>> GetByType(int institutionTypeId, CancellationToken cancellationToken)
     {
-        var institutions = await BaseQuery()
+        var institutions = await ApplyPublicVisibilityFilter(BaseQuery())
             .Where(x => x.InstitutionTypeId == institutionTypeId)
             .ToListAsync(cancellationToken);
 
@@ -49,7 +50,7 @@ public class InstitutionsController(
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<InstitutionDto>>> Search([FromQuery] InstitutionSearchRequestDto request, CancellationToken cancellationToken)
     {
-        var query = BaseQuery();
+        var query = ApplyPublicVisibilityFilter(BaseQuery());
 
         if (!string.IsNullOrWhiteSpace(request.Name))
             query = query.Where(x => x.Name.Contains(request.Name));
@@ -65,8 +66,8 @@ public class InstitutionsController(
 
         if (!string.IsNullOrWhiteSpace(request.Program))
             query = query.Where(x => x.Programs.Any(p => p.Name.Contains(request.Program) || (p.Level != null && p.Level.Contains(request.Program))));
-            
-        if (request.IsApproved.HasValue)
+
+        if (IsAdminUser() && request.IsApproved.HasValue)
             query = query.Where(x => x.IsApproved == request.IsApproved.Value);
 
         if (request.MinTuitionFee.HasValue)
@@ -96,7 +97,7 @@ public class InstitutionsController(
     [AllowAnonymous]
     public async Task<ActionResult<InstitutionFullDetailsDto>> GetFullDetails(int id, CancellationToken cancellationToken)
     {
-        var institution = await context.Institutions
+        var institution = await ApplyPublicVisibilityFilter(context.Institutions
             .AsNoTracking()
             .Include(x => x.InstitutionType)
             .Include(x => x.Details)
@@ -104,7 +105,7 @@ public class InstitutionsController(
             .Include(x => x.Staff)
             .Include(x => x.Facilities)
             .Include(x => x.Reviews)
-            .Include(x => x.Announcements)
+            .Include(x => x.Announcements))
             .FirstOrDefaultAsync(x => x.InstitutionId == id, cancellationToken);
 
         if (institution == null)
@@ -264,6 +265,11 @@ public class InstitutionsController(
             .Include(x => x.InstitutionType)
             .Include(x => x.Programs)
             .Include(x => x.Reviews);
+
+    private bool IsAdminUser() => User.IsInRole("Admin");
+
+    private IQueryable<Institution> ApplyPublicVisibilityFilter(IQueryable<Institution> query) =>
+        IsAdminUser() ? query : query.Where(x => x.IsApproved);
 
     private int? CurrentUserIdOrNull()
     {
