@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EduKos.Application.DTOs.Education;
+using EduKos.Domain.Constants;
 using EduKos.Domain.Entities;
 using EduKos.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ namespace EduKos.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Roles = AppRoles.Nxenes)]
 public class SavedInstitutionsController(AppDbContext context) : CrudControllerBase<SavedInstitution, SavedInstitutionDto>(context)
 {
     protected override DbSet<SavedInstitution> Set => Context.SavedInstitutions;

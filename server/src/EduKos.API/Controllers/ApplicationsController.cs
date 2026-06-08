@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EduKos.Application.DTOs.Education;
+using EduKos.Domain.Constants;
 using EduKos.Domain.Entities;
 using EduKos.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -38,6 +39,7 @@ public class ApplicationsController(AppDbContext context, IRtcAlertService rtcAl
     }
 
     [HttpGet("mine")]
+    [Authorize(Roles = AppRoles.Nxenes)]
     public async Task<ActionResult<IEnumerable<ApplicationDto>>> GetMine(CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -64,6 +66,7 @@ public class ApplicationsController(AppDbContext context, IRtcAlertService rtcAl
     }
 
     [HttpPost]
+    [Authorize(Roles = AppRoles.Nxenes)]
     public async Task<ActionResult<ApplicationDto>> Create([FromBody] ApplicationDto dto, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();

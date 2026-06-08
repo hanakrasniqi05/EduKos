@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Footer from "../sections/Footer";
 import {
+  ROLES,
   getInstitutionFullDetails,
   type InstitutionAnnouncementDto,
   type InstitutionFacilityDto,
@@ -25,6 +26,7 @@ import {
   type ReviewDto,
 } from "../lib/api";
 import ContactButton from "../components/rtc/ContactButton";
+import { useOptionalAuth } from "../context/authContextState";
 
 const formatMoney = (value?: number) => {
   if (value === undefined || value === null) return "Pa tarife";
@@ -77,6 +79,7 @@ const EmptyState = ({ text }: { text: string }) => (
 const InstitutionDetails: React.FC = () => {
   const { institutionId } = useParams();
   const [details, setDetails] = useState<InstitutionFullDetailsDto | null>(null);
+  const auth = useOptionalAuth()?.auth ?? null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const parsedInstitutionId = Number(institutionId);
@@ -151,6 +154,7 @@ const InstitutionDetails: React.FC = () => {
     : institution.website
       ? `https://${institution.website}`
       : null;
+  const canApply = !auth || auth.roles.includes(ROLES.Nxenes);
 
   return (
     <main className="min-h-screen bg-[#f7fbf3]">
@@ -167,13 +171,15 @@ const InstitutionDetails: React.FC = () => {
               {institution.description || "Ky institucion ende nuk ka shtuar pershkrim te detajuar."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                to={`/apply?institutionId=${institution.institutionId}`}
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
-              >
-                <GraduationCap size={18} />
-                Apliko tani
-              </Link>
+              {canApply && (
+                <Link
+                  to={`/apply?institutionId=${institution.institutionId}`}
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
+                >
+                  <GraduationCap size={18} />
+                  Apliko tani
+                </Link>
+              )}
               <ContactButton institutionId={institution.institutionId} />
               {website && (
                 <a

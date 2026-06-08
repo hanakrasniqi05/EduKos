@@ -10,6 +10,14 @@ services:
     volumes:
       - edukos-sql-data:/var/opt/mssql
 
+  mongo:
+    image: mongo:7
+    container_name: edukos-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - edukos-mongo-data:/data/db
+
   api:
     build:
       context: ./server
@@ -17,6 +25,7 @@ services:
     container_name: edukos-api
     depends_on:
       - db
+      - mongo
     restart: on-failure
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
@@ -29,6 +38,11 @@ services:
       Jwt__RefreshTokenDays: "7"
       Rtc__BaseUrl: "http://rtc:5060/"
       Rtc__InternalSecret: "EDUKOS_RTC_INTERNAL_SECRET_CHANGE_ME"
+      MongoDb__ConnectionString: "mongodb://mongo:27017"
+      MongoDb__DatabaseName: "EduKosNonRelational"
+      MongoDb__LogsCollection: "logs"
+      MongoDb__NotificationsCollection: "notifications"
+      MongoDb__ActivityHistoryCollection: "activity_history"
     ports:
       - "5088:8080"
 
@@ -53,3 +67,4 @@ services:
 
 volumes:
   edukos-sql-data:
+  edukos-mongo-data:

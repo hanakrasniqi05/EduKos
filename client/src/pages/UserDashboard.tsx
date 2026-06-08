@@ -12,6 +12,7 @@ import {
 } from "../lib/api";
 import ApplicationStatusLive from "../components/rtc/ApplicationStatusLive";
 import RealtimeNotificationBadge from "../components/rtc/RealtimeNotificationBadge";
+import { useAuth } from "../context/authContextState";
 import { useRtc } from "../context/rtcContextState";
 
 type Section = "overview" | "saved" | "applications" | "notifications" | "profile";
@@ -55,6 +56,7 @@ const listVariants: Variants = {
 };
 
 export default function UserDashboard() {
+  const { auth } = useAuth();
   const { notifications: realtimeNotifications } = useRtc();
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [data, setData] = useState<DashboardData | null>(null);
@@ -194,6 +196,8 @@ export default function UserDashboard() {
 
   const initials = `${data.user.firstName?.[0] ?? ""}${data.user.lastName?.[0] ?? ""}` || "U";
   const fullName = `${data.user.firstName ?? ""} ${data.user.lastName ?? ""}`.trim() || data.user.email;
+  const displayRoles = data.user.roles.length ? data.user.roles : auth?.roles ?? [];
+  const firstName = data.user.firstName || fullName.split(" ")[0] || "perdorues";
 
   return (
     <motion.main
@@ -220,7 +224,7 @@ export default function UserDashboard() {
             <h1 className="mt-3 font-semibold">{fullName}</h1>
             <p className="break-all text-sm text-gray-500">{data.user.email}</p>
             <span className="mt-3 inline-flex rounded-full border border-emerald/30 bg-emerald/10 px-3 py-1 text-xs font-semibold text-yale-blue">
-              {data.user.roles.join(", ") || "Nxenes"}
+              {displayRoles.join(", ") || "Pa rol"}
             </span>
           </div>
 
@@ -274,7 +278,7 @@ export default function UserDashboard() {
             {activeSection === "overview" && (
             <motion.div key="overview" className="space-y-6" variants={riseVariants} initial="hidden" animate="visible" exit="exit">
               <header>
-                <h2 className="text-2xl font-bold">Mire se erdhe, {data.user.firstName || "nxenes"}!</h2>
+                <h2 className="text-2xl font-bold">Mire se erdhe, {firstName}!</h2>
                 <p className="text-gray-600">Menaxho institucionet, aplikimet dhe njoftimet e tua.</p>
               </header>
 

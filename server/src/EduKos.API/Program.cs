@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using EduKos.API.Services.DataManagement;
 using EduKos.API.Services.Rtc;
+using EduKos.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,6 +104,8 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await context.Database.MigrateAsync();
+    var mongoInitializer = scope.ServiceProvider.GetRequiredService<MongoCollectionInitializer>();
+    await mongoInitializer.InitializeAsync();
     await RoleSeeder.SeedRolesAsync(context);
     await DemoDataSeeder.SeedAsync(context);
 }
