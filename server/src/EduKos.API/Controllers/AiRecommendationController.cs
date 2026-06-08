@@ -2,6 +2,8 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EduKos.Application.DTOs;
+using EduKos.Application.Services;
 
 namespace EduKos.API.Controllers;
 
@@ -12,11 +14,15 @@ public class AiRecommendationController : ControllerBase
 {
     private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
+    private readonly InstitutionScoringService _scoringService;
 
-    public AiRecommendationController(IConfiguration configuration)
+    public AiRecommendationController(
+        IConfiguration configuration,
+        InstitutionScoringService scoringService)
     {
         _configuration = configuration;
         _httpClient = new HttpClient();
+        _scoringService = scoringService;
     }
 
     [HttpPost("best-match")]
@@ -29,34 +35,56 @@ public class AiRecommendationController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(apiKey))
             return BadRequest("OpenAI API key mungon në appsettings.json.");
+        var rankedInstitutions = request.Institutions
+            .Select(i => new
+            {
+                Institution = i,
+                Score = _scoringService.CalculateScore(i, request.Preferences)
+            })
+            .OrderByDescending(x => x.Score)
+            .ToList();
+
+        var best = rankedInstitutions.First();
+
+        var aiInput = new
+        {
+            rankedInstitutions = rankedInstitutions.Select(r => new
+            {
+                name = r.Institution.Name,
+                city = r.Institution.City,
+                description = r.Institution.Description,
+                score = r.Score
+            }),
+            preferences = request.Preferences
+        };
 
         var prompt = $@"
-Ti je asistent edukimi për platformën EduKos.
+            Ti je një asistent shpjegues për platformën EduKos.
 
-Detyra jote është të rekomandosh institucionin më të përshtatshëm nga lista që përdoruesi ka zgjedhur për krahasim.
+            Detyra jote:
+            - MOS ndrysho renditjen.
+            - MOS zgjedh institucion tjetër.
+            - Vetëm shpjego pse institucioni i parë është më i miri.
 
-Rregulla:
-- Përgjigju vetëm në shqip.
-- Mos shpik të dhëna.
-- Bazohu vetëm në informacionet e dhëna.
-- Nëse disa të dhëna mungojnë, përmende këtë në arsye.
-- Kthe vetëm JSON valid.
+            Institucioni më i mirë (i zgjedhur nga sistemi):
+            {JsonSerializer.Serialize(best)}
 
-Preferencat e përdoruesit:
-{JsonSerializer.Serialize(request.Preferences)}
+            Lista e renditur:
+            {JsonSerializer.Serialize(aiInput.rankedInstitutions)}
 
-Institucionet:
-{JsonSerializer.Serialize(request.Institutions)}
+            Preferencat e përdoruesit:
+            {JsonSerializer.Serialize(request.Preferences)}
 
-Formati i përgjigjes:
-{{
-  ""bestOption"": ""emri i institucionit"",
-  ""reason"": ""arsyeja kryesore pse ky institucion është më i përshtatshmi"",
-  ""score"": 85,
-  ""pros"": [""përparësi 1"", ""përparësi 2""],
-  ""cons"": [""mangësi ose e dhënë që mungon""]
-}}
-";
+            Kthe vetëm JSON valid:
+
+            {{
+            ""bestOption"": ""emri i institucionit"",
+            ""reason"": ""arsye e qartë pse është më i miri"",
+            ""score"": 0,
+            ""pros"": [""përparësi 1"", ""përparësi 2""],
+            ""cons"": [""mungesa ose kufizime""]
+            }}
+            ";
 
         var body = new
         {
@@ -102,34 +130,21 @@ Formati i përgjigjes:
         if (string.IsNullOrWhiteSpace(aiContent))
             return BadRequest("OpenAI nuk ktheu përgjigje.");
 
-        var parsedResponse = JsonSerializer.Deserialize<object>(aiContent);
+        var parsedResponse = JsonSerializer.Deserialize<AiRecommendationResponse>(
+            aiContent,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }
+        );
+
+        if (parsedResponse == null)
+        {
+            return BadRequest("AI response could not be parsed.");
+        }
+
+        return Ok(parsedResponse);
 
         return Ok(parsedResponse);
     }
-}
-
-public class AiRecommendationRequest
-{
-    public List<AiInstitutionDto> Institutions { get; set; } = new();
-    public AiPreferencesDto Preferences { get; set; } = new();
-}
-
-public class AiInstitutionDto
-{
-    public string? Name { get; set; }
-    public string? City { get; set; }
-    public string? Address { get; set; }
-    public string? Description { get; set; }
-    public string? InstitutionTypeName { get; set; }
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
-    public string? Website { get; set; }
-}
-
-public class AiPreferencesDto
-{
-    public string? City { get; set; }
-    public string? Budget { get; set; }
-    public string? Priority { get; set; }
-    public string? Interests { get; set; }
 }

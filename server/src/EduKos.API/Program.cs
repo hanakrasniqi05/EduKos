@@ -13,11 +13,13 @@ using EduKos.API.Services.NoSql;
 using EduKos.API.Services.Rtc;
 using EduKos.API.Middleware;
 using EduKos.Infrastructure.Services;
+using EduKos.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IDataManagementService, DataManagementService>();
+builder.Services.AddScoped<InstitutionScoringService>();
 builder.Services.AddSingleton<INoSqlDataService, NoSqlDataService>();
 builder.Services.AddSingleton<IInstitutionAnalyticsService, InstitutionAnalyticsService>();
 builder.Services.AddScoped<IRtcConversationAccessPolicy, RtcConversationAccessPolicy>();
