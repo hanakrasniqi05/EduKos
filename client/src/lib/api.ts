@@ -187,6 +187,19 @@ export type InstitutionAnnouncementDto = {
   createdAt: string;
 };
 
+export type DailyViewDto = {
+  date: string;
+  views: number;
+};
+
+export type InstitutionAnalyticsDto = {
+  institutionId: number;
+  from: string;
+  totalViews: number;
+  uniqueAuthenticatedUsers: number;
+  dailyViews: DailyViewDto[];
+};
+
 export type InstitutionFullDetailsDto = {
   institution: InstitutionDto;
   details?: InstitutionDetailDto;
@@ -716,6 +729,15 @@ export async function getDashboardData(): Promise<DashboardData> {
 
 export async function getMyInstitutionProfile(): Promise<InstitutionDto> {
   return request<InstitutionDto>("/institution/my-profile");
+}
+
+export async function getInstitutionAnalytics(
+  institutionId: number,
+  days = 30,
+): Promise<InstitutionAnalyticsDto> {
+  return request<InstitutionAnalyticsDto>(
+    `/institution-analytics/${institutionId}?days=${days}`,
+  );
 }
 
 export async function updateMyInstitutionProfile(

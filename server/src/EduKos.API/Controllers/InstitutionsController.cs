@@ -1,15 +1,19 @@
 using EduKos.Application.DTOs.Education;
 using EduKos.Domain.Entities;
 using EduKos.Infrastructure.Persistence;
+using EduKos.API.Services.NoSql;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EduKos.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class InstitutionsController(AppDbContext context) : ControllerBase
+public class InstitutionsController(
+    AppDbContext context,
+    IInstitutionAnalyticsService analyticsService) : ControllerBase
 {
 
     [HttpGet]
@@ -79,6 +83,12 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
         }
 
         var institutions = await query.ToListAsync(cancellationToken);
+        await analyticsService.TrackInstitutionSearchAsync(
+            request,
+            institutions.Count,
+            CurrentUserIdOrNull(),
+            cancellationToken);
+
         return Ok(institutions.Select(ToDto));
     }
 
@@ -99,6 +109,11 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
 
         if (institution == null)
             return NotFound();
+
+        await analyticsService.TrackInstitutionViewAsync(
+            institution.InstitutionId,
+            CurrentUserIdOrNull(),
+            cancellationToken);
 
         return Ok(new InstitutionFullDetailsDto
         {
@@ -249,6 +264,12 @@ public class InstitutionsController(AppDbContext context) : ControllerBase
             .Include(x => x.InstitutionType)
             .Include(x => x.Programs)
             .Include(x => x.Reviews);
+
+    private int? CurrentUserIdOrNull()
+    {
+        var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(value, out var userId) ? userId : null;
+    }
 
     private static InstitutionDto ToDto(Institution institution)
     {

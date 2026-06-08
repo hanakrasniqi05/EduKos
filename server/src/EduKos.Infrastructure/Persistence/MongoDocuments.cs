@@ -34,7 +34,7 @@ public class ActivityHistoryDocument
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
     public string Action { get; set; } = default!;
     public string? EntityName { get; set; }
     public string? EntityId { get; set; }

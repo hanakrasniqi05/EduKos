@@ -52,7 +52,13 @@ public class MongoCollectionInitializer
             new CreateIndexModel<ActivityHistoryDocument>(
                 Builders<ActivityHistoryDocument>.IndexKeys.Ascending(x => x.UserId).Descending(x => x.CreatedAt)),
             new CreateIndexModel<ActivityHistoryDocument>(
-                Builders<ActivityHistoryDocument>.IndexKeys.Ascending(x => x.Action).Descending(x => x.CreatedAt))
+                Builders<ActivityHistoryDocument>.IndexKeys.Ascending(x => x.Action).Descending(x => x.CreatedAt)),
+            new CreateIndexModel<ActivityHistoryDocument>(
+                Builders<ActivityHistoryDocument>.IndexKeys
+                    .Ascending(x => x.Action)
+                    .Ascending(x => x.EntityName)
+                    .Ascending(x => x.EntityId)
+                    .Descending(x => x.CreatedAt))
         };
 
         return _context.ActivityHistory.Indexes.CreateManyAsync(indexes, cancellationToken);

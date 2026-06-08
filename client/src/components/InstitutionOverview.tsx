@@ -11,6 +11,7 @@ import {
   type InstitutionFacilityDto,
   type InstitutionAnnouncementDto,
 } from "../lib/api";
+import InstitutionAnalyticsPanel from "./InstitutionAnalyticsPanel";
 
 export default function InstitutionOverview() {
   const [institution, setInstitution] = useState<InstitutionDto | null>(null);
@@ -111,6 +112,8 @@ async function loadAll() {
           </div>
         ))}
       </div>
+
+      <InstitutionAnalyticsPanel institutionId={institution.institutionId} />
 
       {recentAnnouncements.length > 0 && (
         <div className="bg-white p-5 rounded-xl shadow-sm">
