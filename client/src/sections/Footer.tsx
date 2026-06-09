@@ -39,10 +39,10 @@ const Footer: React.FC = () => {
       title: 'Kërkoni',
       delay: 0.1,
       links: [
-        { label: 'Çerdhet', to: '/cerdhet' },
-        { label: 'Shkollat Fillore', to: '/shkollat-fillore' },
-        { label: 'Shkollat e Mesme', to: '/shkollat-e-mesme' },
-        { label: 'Universitetet', to: '/universitetet' },
+        { label: 'Çerdhet', to: '/explore/3' },
+        { label: 'Shkollat Fillore', to: '/explore/3' },
+        { label: 'Shkollat e Mesme', to: '/explore/3' },
+        { label: 'Universitetet', to: '/explore/3' },
       ]
     },
     {

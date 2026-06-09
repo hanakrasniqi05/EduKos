@@ -103,7 +103,7 @@ const HeroHeader: React.FC = () => {
             nga parashkollori deri në universitet, në një vend të vetëm.
           </motion.p>
           
-          <Link to="/universitetet">
+          <Link to="/explore/3">
             <motion.span
               className="inline-block bg-[var(--color-green-light)] hover:bg-[var(--color-emerald)] text-black font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out shadow-lg"
               variants={itemVariants}

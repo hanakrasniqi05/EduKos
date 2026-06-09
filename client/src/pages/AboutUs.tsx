@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import Footer from "../sections/Footer";
 
-//import FE from "../assets/FE.jpg";
+import Default from "../assets/default.png"
 import HK from "../assets/HK.png";
 //import LB from "../assets/LB.png";
 //import AA from "../assets/AA.jpeg";
@@ -11,7 +11,7 @@ const team = [
   {
     name: "Florenta Elezi",
     role: "Software Engineer",
-    img: "",
+    img: Default,
     linkedin: "https://www.linkedin.com/in/florenta-elezi-7469613aa/",
   },
   {
@@ -23,13 +23,13 @@ const team = [
   {
     name: "Leon Berisha",
     role: "Backend Developer",
-    img: "",
+    img: Default,
     linkedin: "https://www.linkedin.com/in/leon-berisha-6a8979362/",
   },
   {
     name: "Albin Aliu",
     role: "Python Developer",
-    img: "",
+    img: Default,
     linkedin: "https://www.linkedin.com/in/albin-aliu-93b25a21a/",
   },
   {

@@ -41,7 +41,7 @@ const HomeSections = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-green-700 text-white p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
+            className="bg-ocean-mist text-white p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
           >
             <UserPlus size={22} className="bg-white/20 w-10 h-10 p-2 rounded-lg" />
             <h3 className="font-semibold">Krijo llogari</h3>
@@ -52,7 +52,7 @@ const HomeSections = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-green-600 text-white p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
+            className="bg-emerald text-white p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
           >
             <School size={22} className="bg-white/20 w-10 h-10 p-2 rounded-lg" />
             <h3 className="font-semibold">Zbulo shkollat</h3>
@@ -63,7 +63,7 @@ const HomeSections = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-green-400 text-black p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
+            className="bg-green-light text-black p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
           >
             <GitCompareArrows size={22} className="bg-white/20 w-10 h-10 p-2 rounded-lg" />
             <h3 className="font-semibold">Krahaso</h3>
@@ -75,7 +75,7 @@ const HomeSections = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-green-300 text-black p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
+            className="bg-light-green text-black p-6 rounded-2xl shadow-lg flex flex-col gap-4 hover:scale-105 transition"
           >
             <Send size={22} className="bg-white/40 w-10 h-10 p-2 rounded-lg" />
             <h3 className="font-semibold">Apliko</h3>
